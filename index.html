@@ -359,7 +359,7 @@ function boot(){
     addEventListener("pointermove",e=>{mx=e.clientX/innerWidth*2-1;my=e.clientY/innerHeight*2-1},{passive:true});
     addEventListener("scroll",()=>{sy=Math.min(scrollY/innerHeight,1.5)},{passive:true});
     const size=()=>{const w=stageEl.clientWidth,h=stageEl.clientHeight;rd.setSize(w,h);cam.aspect=w/h;
-      const wide=w>=900;grp.position.x=wide?1.9:0;grp.position.y=wide?0:1.2;fit=wide?1:Math.min(1,cam.aspect*4.73*.9/3.9);grp.scale.setScalar(fit);cam.updateProjectionMatrix()};
+      const wide=w>=900;grp.position.x=wide?1.9:0;grp.position.y=wide?0:1.6;fit=wide?1:Math.min(1,cam.aspect*4.73*.75/3.9);grp.scale.setScalar(fit);cam.updateProjectionMatrix()};
     addEventListener("resize",size);size();
     let raf=0,vis=true;const t0=performance.now();
     const draw=()=>{raf=0;const t=(performance.now()-t0)/1000;
