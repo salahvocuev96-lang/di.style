@@ -315,24 +315,9 @@ function thread(){ // текстуры: цвет + рельеф стежков
   M.fillStyle="#fff";M.font="700 560px Georgia,serif";M.textAlign="center";M.textBaseline="middle";M.fillText("DS",S/2,S/2+20);
   const shade=mk(),H=shade.getContext("2d");H.filter="blur(14px)";H.drawImage(msk,6,10);A.globalAlpha=.8;A.drawImage(shade,0,0);A.globalAlpha=1; // тень под нитью
   const L=mk(),LB=mk(),a=L.getContext("2d"),b=LB.getContext("2d");let sd=7;const r=()=>(sd=(sd*16807)%2147483647)/2147483647;
-  for(let k=-S;k<-S;k+=6){const h=Math.floor(176+r()*40);a.strokeStyle=`rgb(${h},${h-22},${h-70})`;a.lineWidth=5;a.beginPath();a.moveTo(k,0);a.lineTo(k-S*.7,S);a.stroke();
+  for(let k=-S;k<S*2;k+=6){const h=Math.floor(176+r()*40);a.strokeStyle=`rgb(${h},${h-22},${h-70})`;a.lineWidth=5;a.beginPath();a.moveTo(k,0);a.lineTo(k-S*.7,S);a.stroke();
     a.strokeStyle="rgba(255,248,225,.45)";a.lineWidth=1.4;a.beginPath();a.moveTo(k-1,0);a.lineTo(k-1-S*.7,S);a.stroke();
     b.strokeStyle="#bbb";b.lineWidth=5;b.beginPath();b.moveTo(k,0);b.lineTo(k-S*.7,S);b.stroke();b.strokeStyle="#fff";b.lineWidth=1.8;b.beginPath();b.moveTo(k-1,0);b.lineTo(k-1-S*.7,S);b.stroke()}
-    // вязаный узор: ряды петель-«ёлочек»
-  const W=14,Hh=16;a.lineCap=b.lineCap="round";
-  for(let row=0;row*Hh<S+Hh;row++)for(let col=0;col*W<S+W;col++){
-    const cx=col*W,cy=row*Hh,h=Math.floor(170+r()*45);
-    [-1,1].forEach(s=>{
-      a.strokeStyle=`rgb(${h},${h-22},${h-70})`;a.lineWidth=8;
-      a.beginPath();a.moveTo(cx+s*W/2,cy-Hh/2);a.lineTo(cx,cy+Hh/2);a.stroke();
-      a.strokeStyle="rgba(255,248,225,.5)";a.lineWidth=2;
-      a.beginPath();a.moveTo(cx+s*W/2-s*1.5,cy-Hh/2+1);a.lineTo(cx-s*1.5,cy+Hh/2+1);a.stroke();
-      b.strokeStyle="#bbb";b.lineWidth=8;
-      b.beginPath();b.moveTo(cx+s*W/2,cy-Hh/2);b.lineTo(cx,cy+Hh/2);b.stroke();
-      b.strokeStyle="#fff";b.lineWidth=2.4;
-      b.beginPath();b.moveTo(cx+s*W/2-s*1.5,cy-Hh/2+1);b.lineTo(cx-s*1.5,cy+Hh/2+1);b.stroke();
-    });
-  }
   [L,LB].forEach(x=>{const g=x.getContext("2d");g.globalCompositeOperation="destination-in";g.drawImage(msk,0,0)});
   A.drawImage(L,0,0);B.drawImage(LB,0,0);return[col,bmp];
 }
