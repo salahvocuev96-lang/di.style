@@ -355,17 +355,17 @@ function boot(){
     const key=new T.DirectionalLight(0xfff0d6,1.5);key.position.set(-3,4,5);sc.add(key);
     const rim=new T.DirectionalLight(0x9fb4d0,.6);rim.position.set(5,-2,2);sc.add(rim);
     const sw=new T.PointLight(0xfff0d6,0,7);sc.add(sw);
-    let mx=0,my=0,tx0=0,ty0=0,sy=0;
+    let mx=0,my=0,tx0=0,ty0=0,sy=0,fit=1;
     addEventListener("pointermove",e=>{mx=e.clientX/innerWidth*2-1;my=e.clientY/innerHeight*2-1},{passive:true});
     addEventListener("scroll",()=>{sy=Math.min(scrollY/innerHeight,1.5)},{passive:true});
     const size=()=>{const w=stageEl.clientWidth,h=stageEl.clientHeight;rd.setSize(w,h);cam.aspect=w/h;
-      const wide=w>=900;grp.position.x=wide?1.9:0;grp.position.y=wide?0:1.6;grp.scale.setScalar(wide?1:.8);cam.updateProjectionMatrix()};
+      const wide=w>=900;grp.position.x=wide?1.9:0;grp.position.y=wide?0:1.2;fit=wide?1:Math.min(1,cam.aspect*4.73*.9/3.9);grp.scale.setScalar(fit);cam.updateProjectionMatrix()};
     addEventListener("resize",size);size();
     let raf=0,vis=true;const t0=performance.now();
     const draw=()=>{raf=0;const t=(performance.now()-t0)/1000;
       if(!reduce){tx0+=(mx*.25-tx0)*.05;ty0+=(my*.18-ty0)*.05}
       grp.rotation.y=tx0-.12;grp.rotation.x=-ty0*.9+.06;
-      const bs=grp.position.x?1:.8;grp.scale.setScalar(bs*(1+sy*.08));grp.position.z=-sy*.6;
+      const bs=fit;grp.scale.setScalar(bs*(1+sy*.08));grp.position.z=-sy*.6;
       const e=reduce?1:1-Math.pow(1-Math.min(t/2.6,1),3); // свет проявляется из темноты, камера подъезжает
       amb.intensity=.28*e;key.intensity=1.5*e;rim.intensity=.6*e;cam.position.z=7.5+(1-e)*2.2-sy*.9;
       sw.intensity=reduce?0:1.8*e;sw.position.set(-4+((t%9)/9)*9,.4,1.7); // мягкий скользящий блик
