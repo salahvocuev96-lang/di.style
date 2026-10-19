@@ -328,12 +328,12 @@ function thread(){ // текстуры: цвет + рельеф стежков
   for(let row=-1;row*h2<S+D;row++)for(let col=-1;col*D<S+D;col++){
     const cx=col*D+(row%2?h2:0),cy=row*h2,h=Math.floor(165+r()*40);
     const dm=c=>{c.beginPath();c.moveTo(cx,cy-h2);c.lineTo(cx+h2,cy);c.lineTo(cx,cy+h2);c.lineTo(cx-h2,cy);c.closePath()};
-    let g=a.createRadialGradient(cx,cy,1,cx,cy,D*.55);g.addColorStop(0,`rgb(${h+35},${h+37},${h+42})`);g.addColorStop(1,`rgb(${h-70},${h-68},${h-62})`);
+    let g=a.createRadialGradient(cx,cy,1,cx,cy,D*.55);g.addColorStop(0,`rgb(${h+35},${h+10},${h-45})`);g.addColorStop(1,`rgb(${h-70},${h-85},${h-120})`);
     dm(a);a.fillStyle=g;a.fill();
-    a.strokeStyle="rgba(235,240,255,.35)";a.lineWidth=1.6;
+    a.strokeStyle="rgba(255,248,225,.35)";a.lineWidth=1.6;
     [-6,0,6].forEach(o=>{a.beginPath();a.moveTo(cx-4,cy+o-3);a.lineTo(cx,cy+o+3);a.lineTo(cx+4,cy+o-3);a.stroke()});
     dm(a);a.strokeStyle="rgba(20,14,6,.9)";a.lineWidth=2.4;a.setLineDash([]);a.stroke();
-    a.setLineDash([4,3]);a.strokeStyle="rgba(235,240,255,.55)";a.lineWidth=1.1;a.stroke();a.setLineDash([]);
+    a.setLineDash([4,3]);a.strokeStyle="rgba(255,240,200,.55)";a.lineWidth=1.1;a.stroke();a.setLineDash([]);
     g=b.createRadialGradient(cx,cy,1,cx,cy,D*.55);g.addColorStop(0,"#fff");g.addColorStop(1,"#555");
     dm(b);b.fillStyle=g;b.fill();b.strokeStyle="#181818";b.lineWidth=3;b.stroke();
   }
