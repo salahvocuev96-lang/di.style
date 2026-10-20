@@ -98,12 +98,18 @@ footer ul{list-style:none;display:grid;gap:.5rem}footer a:hover{color:var(--ink)
 form{grid-template-columns:1fr}
 }
 @media(max-width:560px){.grid4,.steps{grid-template-columns:1fr}.btn{width:100%}}
-.dark{position:absolute;inset:0;z-index:1;background:#050505;pointer-events:none;transition:opacity 2.4s ease .1s}
+.dark{position:absolute;inset:0;z-index:1;background:#050505;pointer-events:none;transition:opacity 3.8s cubic-bezier(.5,0,.2,1) .05s}
 body.ready .dark{opacity:0}
 .mask{overflow:hidden;padding-bottom:.12em}
 .mask>span{display:inline-block;transform:translateY(105%);transition:transform 1.3s cubic-bezier(.2,.7,.2,1) .4s}
 body.ready .hero .mask>span,.mask.mh.in>span{transform:none}
 .mask.mh>span{transition-delay:0s}
+.lt{display:inline-block;opacity:0;transform:translateY(.95em);transition:opacity .65s cubic-bezier(.2,.7,.2,1),transform .9s cubic-bezier(.15,.75,.2,1)}
+body.ready .hero .lt{opacity:1;transform:none}
+.hero-title{position:relative;overflow:hidden}
+@keyframes shim{from{transform:translateX(-130%)}to{transform:translateX(130%)}}
+.hero-title::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 25%,rgba(255,252,220,.65) 50%,transparent 75%);transform:translateX(-130%);pointer-events:none}
+.hero-title.glow::after{animation:shim 1.1s cubic-bezier(.4,0,.6,1) .1s forwards}
 .cats,.prods{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:3rem}
 .cat,.prod{position:relative;border:1px solid var(--line);overflow:hidden;transition:transform .35s ease-out,border-color .4s;will-change:transform}
 .cat{min-height:15rem;padding:0;color:var(--ink);cursor:pointer;background-color:#111;font:inherit;text-align:left}
@@ -157,7 +163,7 @@ body.ready .hero .mask>span,.mask.mh.in>span{transform:none}
 <div class="fallback" aria-hidden="true">DS</div>
 <div class="wrap"><div class="copy">
 <span class="eyebrow reveal">Студия вышивки и брендирования</span>
-<h1 class="mask"><span>DI STYLE</span></h1>
+<h1 id="htitle" class="hero-title"></h1>
 <p class="tag reveal">Вышивка, которая создаёт характер</p>
 <p class="lead reveal">Вышивка на одежде и профессиональное брендирование текстильных изделий для вашего бренда, команды или личного стиля.</p>
 <div class="cta reveal"><a class="btn solid" href="#order">Обсудить заказ</a><a class="btn ghost" href="#works">Посмотреть работы</a></div>
@@ -281,6 +287,7 @@ f.addEventListener("submit",async e=>{
 /* ===== v2: движение, каталог, корзина ===== */
 const RM=matchMedia("(prefers-reduced-motion:reduce)").matches;
 setTimeout(()=>document.body.classList.add("ready"),150);
+(()=>{const h=document.getElementById("htitle");if(!h)return;const s="DI STYLE";h.setAttribute("aria-label",s);h.innerHTML=s.split("").map((c,i)=>c===" "?`<span style="display:inline-block;width:.28em"> </span>`:`<span class="lt" style="transition-delay:${.22+i*.09}s">${c}</span>`).join("");if(!RM)setTimeout(()=>h.classList.add("glow"),(.22+s.length*.09)*1000+700)})();
 document.querySelectorAll("h2.reveal").forEach(h=>{h.classList.remove("reveal");h.classList.add("mask","mh");h.innerHTML="<span>"+h.innerHTML+"</span>"});
 const CATS=[["hoodies","Худи"],["tshirts","Футболки"],["caps","Кепки"],["outerwear","Верхняя одежда"],["premium","Premium-коллекция"],["accessories","Аксессуары"]];
 const PRODUCTS=[ // демо-позиции без цен: замените на реальный каталог
@@ -356,10 +363,11 @@ function boot(){
     let raf=0,vis=true;const t0=performance.now();
     const draw=()=>{raf=0;const t=(performance.now()-t0)/1000;
       if(!reduce){tx0+=(mx*.25-tx0)*.05;ty0+=(my*.18-ty0)*.05}
-      grp.rotation.y=tx0-.12;grp.rotation.x=-ty0*.9+.06;
-      const bs=fit;grp.scale.setScalar(bs*(1+sy*.08));grp.position.z=-sy*.6;
-      const e=reduce?1:1-Math.pow(1-Math.min(t/2.6,1),3); // свет проявляется из темноты, камера подъезжает
-      amb.intensity=.28*e;key.intensity=1.5*e;rim.intensity=.6*e;cam.position.z=7.5+(1-e)*2.2-sy*.9;
+      const e=reduce?1:1-Math.pow(1-Math.min(t/4,1),3);
+      grp.rotation.y=tx0-.12-(1-e)*.6;grp.rotation.x=-ty0*.9+.06+(1-e)*.2;
+      const bs=fit;grp.scale.setScalar(bs*(1+sy*.08)*(reduce?1:.88+e*.12));grp.position.z=-sy*.6;
+      // кинематичный влёт из темноты
+      amb.intensity=.28*e;key.intensity=1.5*e;rim.intensity=.6*e;cam.position.z=7.5+(1-e)*5-sy*.9;
       sw.intensity=reduce?0:1.8*e;sw.position.set(-4+((t%9)/9)*9,.4,1.7); // мягкий скользящий блик
       key.position.x=-3+(reduce?0:Math.sin(t*.4)*.8);
       rd.render(sc,cam);if(vis&&!reduce)raf=requestAnimationFrame(draw)};
