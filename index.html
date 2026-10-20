@@ -31,27 +31,13 @@ header{position:fixed;inset:0 0 auto 0;z-index:50;padding-top:env(safe-area-inse
 .btn.solid{background:var(--gold);color:#111}.btn.solid:hover{background:var(--ink)}
 .btn.ghost{border-color:var(--line)}
 .burger{display:none;background:none;border:1px solid var(--line);color:var(--ink);width:3rem;height:3rem;font-size:1.2rem;cursor:pointer}
-.hero{position:relative;min-height:100svh;overflow:hidden}
+.hero{position:relative;min-height:100svh;display:grid;align-items:center;overflow:hidden}
 #stage{position:absolute;inset:0;z-index:0}
 #stage canvas{width:100%;height:100%;display:block}
 .fallback{position:absolute;right:8%;top:50%;transform:translateY(-50%);width:min(42vw,520px);aspect-ratio:1;display:none;place-items:center;font:700 clamp(5rem,16vw,12rem)/1 var(--serif);color:var(--gold);background:repeating-linear-gradient(35deg,#161616 0 3px,#101010 3px 6px);border:1px solid var(--line);text-shadow:0 2px 0 #000,0 0 30px #0008}
 .nogl .fallback{display:grid}
-.hero .wrap {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 2;
-    pointer-events: none;
-    padding-bottom: 1rem; /* Прижимаем к низу */
-}
-.hero .copy {
-    max-width: 640px;
-    pointer-events: auto;
-    background: rgba(6, 7, 14, 0.85); /* Чуть плотнее чёрный для читаемости */
-    padding: 1.2rem 1.5rem 1.5rem;
-    backdrop-filter: blur(8px);
-}
+.hero .wrap{position:relative;z-index:2;pointer-events:none;padding-top:6rem;padding-bottom:4rem}
+.hero .copy{max-width:640px;pointer-events:auto}
 .hero h1{font-size:clamp(3.4rem,11vw,9rem);letter-spacing:.04em}
 .hero .tag{font-family:var(--serif);font-style:italic;font-size:clamp(1.3rem,3vw,2rem);color:var(--gold);margin:1.2rem 0 1rem}
 .hero p.lead{color:var(--mute);max-width:34rem;margin-bottom:2rem}
@@ -104,32 +90,20 @@ footer{border-top:1px solid var(--line);padding:4rem 0 2rem;color:var(--mute);fo
 footer ul{list-style:none;display:grid;gap:.5rem}footer a:hover{color:var(--ink)}
 .big{font-family:var(--serif);color:var(--ink);letter-spacing:.3em;font-size:1.2rem;margin-bottom:1rem}
 @media(max-width:900px){
-  .menu{position:fixed;inset:4.5rem 0 auto 0;background:#0a0a0af5;flex-direction:column;align-items:flex-start;padding:1.5rem;gap:1.4rem;display:none;border-bottom:1px solid var(--line)}
-  .menu.open{display:flex}
-  .burger{display:block}
-  .grid4,.steps{grid-template-columns:1fr 1fr}
-  .why,.fg{grid-template-columns:1fr}
-  .work{grid-column:span 12!important}
-  
-  /* Вот эти две строки мы исправили, чтобы прижать блок к низу на телефоне: */
-  .hero .wrap { padding-top: 3rem; padding-bottom: 1rem; }
-  .hero .copy { background: rgba(6,7,14,.85); padding: 1rem 1.2rem 1.2rem; }
-  
-  form{grid-template-columns:1fr}
+.menu{position:fixed;inset:4.5rem 0 auto 0;background:#0a0a0af5;flex-direction:column;align-items:flex-start;padding:1.5rem;gap:1.4rem;display:none;border-bottom:1px solid var(--line)}
+.menu.open{display:flex}.burger{display:block}
+.grid4,.steps{grid-template-columns:1fr 1fr}.why,.fg{grid-template-columns:1fr}
+.work{grid-column:span 12!important}
+.hero .wrap{padding-top:5rem;align-self:end}.hero .copy{background:linear-gradient(transparent,#0a0a0acc 25%)}
+form{grid-template-columns:1fr}
 }
 @media(max-width:560px){.grid4,.steps{grid-template-columns:1fr}.btn{width:100%}}
-.dark{position:absolute;inset:0;z-index:1;background:#050505;pointer-events:none;transition:opacity 3.8s cubic-bezier(.5,0,.2,1) .05s}
+.dark{position:absolute;inset:0;z-index:1;background:#050505;pointer-events:none;transition:opacity 2.4s ease .1s}
 body.ready .dark{opacity:0}
 .mask{overflow:hidden;padding-bottom:.12em}
 .mask>span{display:inline-block;transform:translateY(105%);transition:transform 1.3s cubic-bezier(.2,.7,.2,1) .4s}
 body.ready .hero .mask>span,.mask.mh.in>span{transform:none}
 .mask.mh>span{transition-delay:0s}
-.lt{display:inline-block;opacity:0;transform:translateY(.95em);transition:opacity .65s cubic-bezier(.2,.7,.2,1),transform .9s cubic-bezier(.15,.75,.2,1)}
-body.ready .hero .lt{opacity:1;transform:none}
-.hero-title{position:relative;white-space:nowrap}
-@keyframes shim{from{background-position:200% 0}to{background-position:-100% 0}}
-.hero-title::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 20%,rgba(255,252,220,.65) 50%,transparent 80%);background-size:200% 100%;background-position:200% 0;pointer-events:none}
-.hero-title.glow::after{animation:shim 1.1s cubic-bezier(.4,0,.6,1) .1s forwards}
 .cats,.prods{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:3rem}
 .cat,.prod{position:relative;border:1px solid var(--line);overflow:hidden;transition:transform .35s ease-out,border-color .4s;will-change:transform}
 .cat{min-height:15rem;padding:0;color:var(--ink);cursor:pointer;background-color:#111;font:inherit;text-align:left}
@@ -183,7 +157,7 @@ body.ready .hero .lt{opacity:1;transform:none}
 <div class="fallback" aria-hidden="true">DS</div>
 <div class="wrap"><div class="copy">
 <span class="eyebrow reveal">Студия вышивки и брендирования</span>
-<h1 id="htitle" class="hero-title"></h1>
+<h1 class="mask"><span>DI STYLE</span></h1>
 <p class="tag reveal">Вышивка, которая создаёт характер</p>
 <p class="lead reveal">Вышивка на одежде и профессиональное брендирование текстильных изделий для вашего бренда, команды или личного стиля.</p>
 <div class="cta reveal"><a class="btn solid" href="#order">Обсудить заказ</a><a class="btn ghost" href="#works">Посмотреть работы</a></div>
@@ -307,7 +281,6 @@ f.addEventListener("submit",async e=>{
 /* ===== v2: движение, каталог, корзина ===== */
 const RM=matchMedia("(prefers-reduced-motion:reduce)").matches;
 setTimeout(()=>document.body.classList.add("ready"),150);
-(()=>{const h=document.getElementById("htitle");if(!h)return;const s="DI STYLE";h.setAttribute("aria-label",s);h.innerHTML=s.split("").map((c,i)=>c===" "?`<span style="display:inline-block;width:.28em"> </span>`:`<span class="lt" style="transition-delay:${.22+i*.09}s">${c}</span>`).join("");if(!RM)setTimeout(()=>h.classList.add("glow"),(.22+s.length*.09)*1000+700)})();
 document.querySelectorAll("h2.reveal").forEach(h=>{h.classList.remove("reveal");h.classList.add("mask","mh");h.innerHTML="<span>"+h.innerHTML+"</span>"});
 const CATS=[["hoodies","Худи"],["tshirts","Футболки"],["caps","Кепки"],["outerwear","Верхняя одежда"],["premium","Premium-коллекция"],["accessories","Аксессуары"]];
 const PRODUCTS=[ // демо-позиции без цен: замените на реальный каталог
@@ -343,14 +316,28 @@ function noGL(){document.body.classList.add("nogl");stageEl.style.display="none"
 function thread(){ // текстуры: цвет + рельеф стежков
   const S=1024,mk=()=>{const c=document.createElement("canvas");c.width=c.height=S;return c};
   const col=mk(),bmp=mk(),msk=mk(),A=col.getContext("2d"),B=bmp.getContext("2d"),M=msk.getContext("2d");
-  A.fillStyle="#07080f";A.fillRect(0,0,S,S);B.fillStyle="#404040";B.fillRect(0,0,S,S);
-  for(let i=0;i<S;i+=4){A.fillStyle=i%8?"#0c0d18":"#050609";A.fillRect(i,0,2,S);A.fillRect(0,i,S,2);B.fillStyle=i%8?"#505060":"#282832";B.fillRect(i,0,2,S);B.fillRect(0,i,S,2)}
+  A.fillStyle="#101010";A.fillRect(0,0,S,S);B.fillStyle="#404040";B.fillRect(0,0,S,S);
+  for(let i=0;i<S;i+=4){A.fillStyle=i%8?"#161616":"#0b0b0b";A.fillRect(i,0,2,S);A.fillRect(0,i,S,2);B.fillStyle=i%8?"#505050":"#303030";B.fillRect(i,0,2,S);B.fillRect(0,i,S,2)}
   M.fillStyle="#fff";M.font="700 560px Georgia,serif";M.textAlign="center";M.textBaseline="middle";M.fillText("DS",S/2,S/2+20);
   const shade=mk(),H=shade.getContext("2d");H.filter="blur(14px)";H.drawImage(msk,6,10);A.globalAlpha=.8;A.drawImage(shade,0,0);A.globalAlpha=1; // тень под нитью
   const L=mk(),LB=mk(),a=L.getContext("2d"),b=LB.getContext("2d");let sd=7;const r=()=>(sd=(sd*16807)%2147483647)/2147483647;
-  for(let k=-S;k<S*2;k+=6){const h=Math.floor(176+r()*40);a.strokeStyle=`rgb(${h},${h-22},${h-70})`;a.lineWidth=5;a.beginPath();a.moveTo(k,0);a.lineTo(k-S*.7,S);a.stroke();
+  for(let k=-S;k<-S;k+=6){const h=Math.floor(176+r()*40);a.strokeStyle=`rgb(${h},${h-22},${h-70})`;a.lineWidth=5;a.beginPath();a.moveTo(k,0);a.lineTo(k-S*.7,S);a.stroke();
     a.strokeStyle="rgba(255,248,225,.45)";a.lineWidth=1.4;a.beginPath();a.moveTo(k-1,0);a.lineTo(k-1-S*.7,S);a.stroke();
     b.strokeStyle="#bbb";b.lineWidth=5;b.beginPath();b.moveTo(k,0);b.lineTo(k-S*.7,S);b.stroke();b.strokeStyle="#fff";b.lineWidth=1.8;b.beginPath();b.moveTo(k-1,0);b.lineTo(k-1-S*.7,S);b.stroke()}
+    // стёганый вязаный узор (татами): ромбы-подушечки со строчкой
+  const D=28,h2=D/2;a.lineJoin=b.lineJoin="round";
+  for(let row=-1;row*h2<S+D;row++)for(let col=-1;col*D<S+D;col++){
+    const cx=col*D+(row%2?h2:0),cy=row*h2,h=Math.floor(165+r()*40);
+    const dm=c=>{c.beginPath();c.moveTo(cx,cy-h2);c.lineTo(cx+h2,cy);c.lineTo(cx,cy+h2);c.lineTo(cx-h2,cy);c.closePath()};
+    let g=a.createRadialGradient(cx,cy,1,cx,cy,D*.55);g.addColorStop(0,`rgb(${h+35},${h+10},${h-45})`);g.addColorStop(1,`rgb(${h-70},${h-85},${h-120})`);
+    dm(a);a.fillStyle=g;a.fill();
+    a.strokeStyle="rgba(255,248,225,.35)";a.lineWidth=1.6;
+    [-6,0,6].forEach(o=>{a.beginPath();a.moveTo(cx-4,cy+o-3);a.lineTo(cx,cy+o+3);a.lineTo(cx+4,cy+o-3);a.stroke()});
+    dm(a);a.strokeStyle="rgba(20,14,6,.9)";a.lineWidth=2.4;a.setLineDash([]);a.stroke();
+    a.setLineDash([4,3]);a.strokeStyle="rgba(255,240,200,.55)";a.lineWidth=1.1;a.stroke();a.setLineDash([]);
+    g=b.createRadialGradient(cx,cy,1,cx,cy,D*.55);g.addColorStop(0,"#fff");g.addColorStop(1,"#555");
+    dm(b);b.fillStyle=g;b.fill();b.strokeStyle="#181818";b.lineWidth=3;b.stroke();
+  }
   [L,LB].forEach(x=>{const g=x.getContext("2d");g.globalCompositeOperation="destination-in";g.drawImage(msk,0,0)});
   A.drawImage(L,0,0);B.drawImage(LB,0,0);return[col,bmp];
 }
@@ -368,26 +355,25 @@ function boot(){
     for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),d=Math.min(1,Math.hypot(x,y)/2.4),w=.25+.75*d*d;
       p.setZ(i,w*(.22*Math.sin(x*1.5+y*.6)+.12*Math.sin(y*2.2-x*.8)+.05*Math.sin(x*4+y*3.1))+.08*Math.sin(x*.9)*(1-w))}
     g.computeVertexNormals();
-    const m=new T.MeshStandardMaterial({map:tx,bumpMap:bt,bumpScale:mob?2.2:3.2,roughness:.9,metalness:.06});
+    const m=new T.MeshStandardMaterial({map:tx,bumpMap:bt,bumpScale:mob?2.2:3.2,roughness:.82,metalness:.12});
     const cloth=new T.Mesh(g,m),grp=new T.Group();grp.add(cloth);sc.add(grp);
-    const amb=new T.AmbientLight(0xfff4e0,.16);sc.add(amb);
-    const key=new T.DirectionalLight(0xfff0d6,1.9);key.position.set(-3,4,5);sc.add(key);
+    const amb=new T.AmbientLight(0xffffff,.28);sc.add(amb);
+    const key=new T.DirectionalLight(0xfff0d6,1.5);key.position.set(-3,4,5);sc.add(key);
     const rim=new T.DirectionalLight(0x9fb4d0,.6);rim.position.set(5,-2,2);sc.add(rim);
     const sw=new T.PointLight(0xfff0d6,0,7);sc.add(sw);
     let mx=0,my=0,tx0=0,ty0=0,sy=0,fit=1;
     addEventListener("pointermove",e=>{mx=e.clientX/innerWidth*2-1;my=e.clientY/innerHeight*2-1},{passive:true});
     addEventListener("scroll",()=>{sy=Math.min(scrollY/innerHeight,1.5)},{passive:true});
     const size=()=>{const w=stageEl.clientWidth,h=stageEl.clientHeight;rd.setSize(w,h);cam.aspect=w/h;
-      const wide=w>=900;grp.position.x=wide?1.9:0;grp.position.y=0;fit=wide?1:1.2;grp.scale.setScalar(fit);cam.updateProjectionMatrix()};
+      const wide=w>=900;grp.position.x=wide?1.9:0;grp.position.y=wide?0:1.6;fit=wide?1:Math.min(1,cam.aspect*4.73*.75/3.9);grp.scale.setScalar(fit);cam.updateProjectionMatrix()};
     addEventListener("resize",size);size();
     let raf=0,vis=true;const t0=performance.now();
     const draw=()=>{raf=0;const t=(performance.now()-t0)/1000;
       if(!reduce){tx0+=(mx*.25-tx0)*.05;ty0+=(my*.18-ty0)*.05}
-      const e=reduce?1:1-Math.pow(1-Math.min(t/4,1),3);
-      grp.rotation.y=tx0-.12-(1-e)*.6;grp.rotation.x=-ty0*.9+.06+(1-e)*.2;
-      const bs=fit;grp.scale.setScalar(bs*(1+sy*.08)*(reduce?1:.93+e*.07));grp.position.z=-sy*.6;
-      // кинематичный влёт из темноты
-      amb.intensity=.16*e;key.intensity=1.9*e;rim.intensity=.6*e;cam.position.z=7.5+(1-e)*5-sy*.9;
+      grp.rotation.y=tx0-.12;grp.rotation.x=-ty0*.9+.06;
+      const bs=fit;grp.scale.setScalar(bs*(1+sy*.08));grp.position.z=-sy*.6;
+      const e=reduce?1:1-Math.pow(1-Math.min(t/2.6,1),3); // свет проявляется из темноты, камера подъезжает
+      amb.intensity=.28*e;key.intensity=1.5*e;rim.intensity=.6*e;cam.position.z=7.5+(1-e)*2.2-sy*.9;
       sw.intensity=reduce?0:1.8*e;sw.position.set(-4+((t%9)/9)*9,.4,1.7); // мягкий скользящий блик
       key.position.x=-3+(reduce?0:Math.sin(t*.4)*.8);
       rd.render(sc,cam);if(vis&&!reduce)raf=requestAnimationFrame(draw)};
