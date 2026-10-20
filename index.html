@@ -199,7 +199,6 @@ body.ready .hero .mask>span,.mask.mh.in>span{transform:none}
 <div class="f"><label for="t">Тип услуги</label><select id="t" name="service" required><option value="">Выберите…</option></select><span class="err" data-for="t"></span></div>
 <div class="f"><label for="q">Количество изделий</label><input id="q" name="qty" type="number" min="1" max="100000" inputmode="numeric"><span class="err" data-for="q"></span></div>
 <div class="f full"><label for="m">Комментарий к заказу</label><textarea id="m" name="comment" rows="4" maxlength="2000"></textarea></div>
-<div class="f full"><label for="l">Логотип или референс (PNG, JPG, SVG, PDF, до 5 МБ)</label><input id="l" name="file" type="file" accept=".png,.jpg,.jpeg,.svg,.pdf"><span class="err" data-for="l"></span></div>
 <div class="f full"><label style="text-transform:none;letter-spacing:0;font-size:.9rem"><input type="checkbox" id="p" style="min-height:0;margin-right:.5rem">Согласен на обработку данных для связи по заявке</label><span class="err" data-for="p"></span></div>
 <button class="btn solid" id="sb" type="submit">Отправить заявку</button>
 <div id="status" role="status" aria-live="polite"></div>
@@ -277,9 +276,7 @@ f.addEventListener("submit",async e=>{
   const c=$("#c").value.trim();if(c.length<5){setErr("c","Укажите телефон или e-mail");ok=false}
   if(!$("#t").value){setErr("t","Выберите тип услуги");ok=false}
   const q=$("#q").value;if(q&&(+q<1||!Number.isInteger(+q))){setErr("q","Укажите целое число от 1");ok=false}
-  const fl=$("#l").files[0];
-  if(fl){if(!/\.(png|jpe?g|svg|pdf)$/i.test(fl.name)){setErr("l","Допустимы PNG, JPG, SVG, PDF");ok=false}else if(fl.size>5*1048576){setErr("l","Файл больше 5 МБ");ok=false}}
-  if(!$("#p").checked){setErr("p","Нужно согласие на обработку данных");ok=false}
+if(!$("#p").checked){setErr("p","Нужно согласие на обработку данных");ok=false}
   if(!ok)return;
   st.className="show";
   if(!CONFIG.endpoint){st.textContent="Отправка заявок пока не подключена: данные никуда не переданы. Чтобы подключить, укажите URL серверного обработчика в CONFIG.endpoint (ключи и секреты храните только на сервере).";return}
