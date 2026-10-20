@@ -287,8 +287,7 @@ if(!$("#p").checked){setErr("p","Нужно согласие на обработ
 });
 /* ===== v2: движение, каталог, корзина ===== */
 const RM=matchMedia("(prefers-reduced-motion:reduce)").matches;
-if("scrollRestoration" in history)history.scrollRestoration="manual";
-window.addEventListener("load",()=>{window.scrollTo(0,0);setTimeout(()=>{window.scrollTo(0,0);document.body.classList.add("ready")},120)});
+setTimeout(()=>document.body.classList.add("ready"),150);
 document.querySelectorAll("h2.reveal").forEach(h=>{h.classList.remove("reveal");h.classList.add("mask","mh");h.innerHTML="<span>"+h.innerHTML+"</span>"});
 const CATS=[["hoodies","Худи"],["tshirts","Футболки"],["caps","Кепки"],["outerwear","Верхняя одежда"],["premium","Premium-коллекция"],["accessories","Аксессуары"]];
 const PRODUCTS=[ // демо-позиции без цен: замените на реальный каталог
