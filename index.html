@@ -141,6 +141,10 @@ body.ready .hero .mask>span,.mask.mh.in>span{transform:none}
 @media(max-width:560px){.cats,.prods{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}.reveal{opacity:1;transform:none}.dark{display:none}.mask>span{transform:none}.thr{clip-path:none}}
 #categories,#catalog,.cartbtn,.thr,a[href="#catalog"]{display:none}
+#modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:center;justify-content:center;padding:1rem}
+#modal-overlay.open{display:flex}
+#modal-box{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:2rem;max-width:560px;width:100%;max-height:80vh;overflow-y:auto;position:relative;white-space:pre-wrap;line-height:1.7;font-size:.9rem}
+#modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--fg);line-height:1}
 </style>
 </head>
 <body>
@@ -207,8 +211,8 @@ body.ready .hero .mask>span,.mask.mh.in>span{transform:none}
 <ul aria-label="Навигация"><li><a href="#services">Услуги</a></li><li><a href="#works">Наши работы</a></li><li><a href="#about">О студии</a></li><li><a href="#order">Заявка</a></li></ul>
 <ul id="ct"></ul></div>
 <div class="wrap" style="margin-top:3rem;display:flex;justify-content:space-between;flex-wrap:wrap;gap:1rem">
-<span>© <span id="yr"></span> DI STYLE</span><a href="#privacy" id="pp">Политика конфиденциальности</a></div>
-<div class="wrap" id="privacy" style="margin-top:1.5rem;font-size:.85rem;white-space:pre-wrap;line-height:1.7">Текст политики конфиденциальности нужно подставить в CONFIG.privacyText.</div>
+<span>© <span id="yr"></span> DI STYLE</span><button id="pp" style="background:none;border:none;color:var(--gold);cursor:pointer;font-size:inherit;padding:0">Политика конфиденциальности</button></div>
+<div id="modal-overlay"><div id="modal-box"><button id="modal-close" aria-label="Закрыть">×</button><span id="privacy"></span></div></div>
 </footer>
 
 <script>
@@ -249,6 +253,10 @@ $("#t").innerHTML+=SERVICES.map(s=>`<option>${s.t}</option>`).join("");
 $("#ct").innerHTML=[CONFIG.email&&`<li><a href="mailto:${CONFIG.email}">${CONFIG.email}</a></li>`,CONFIG.phone&&`<li>${CONFIG.phone}</li>`,CONFIG.address&&`<li>${CONFIG.address}</li>`,...CONFIG.social.map(x=>`<li><a href="${x.url}" rel="noopener">${x.label}</a></li>`)].filter(Boolean).join("")||"<li>Контакты будут добавлены в CONFIG.</li>";
 $("#yr").textContent=new Date().getFullYear();
 $("#privacy").textContent=CONFIG.privacyText;
+const ov=$("#modal-overlay");
+$("#pp").onclick=()=>ov.classList.add("open");
+$("#modal-close").onclick=()=>ov.classList.remove("open");
+ov.addEventListener("click",e=>{if(e.target===ov)ov.classList.remove("open")});
 document.querySelectorAll("[data-svc]").forEach(a=>a.addEventListener("click",()=>{$("#t").value=a.dataset.svc}));
 /* меню */
 const bg=$("#burger"),mn=$("#menu");
