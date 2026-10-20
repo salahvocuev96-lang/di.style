@@ -94,7 +94,7 @@ footer ul{list-style:none;display:grid;gap:.5rem}footer a:hover{color:var(--ink)
 .menu.open{display:flex}.burger{display:block}
 .grid4,.steps{grid-template-columns:1fr 1fr}.why,.fg{grid-template-columns:1fr}
 .work{grid-column:span 12!important}
-.hero .wrap{padding-top:5rem;align-self:end;padding-bottom:2rem;margin-top:auto}.hero .copy{background:linear-gradient(transparent,#0a0a0acc 25%);margin-top:auto}
+.hero .wrap{padding-top:5rem;align-self:end}.hero .copy{background:linear-gradient(transparent,#0a0a0acc 25%)}
 form{grid-template-columns:1fr}
 }
 @media(max-width:560px){.grid4,.steps{grid-template-columns:1fr}.btn{width:100%}}
@@ -361,7 +361,7 @@ function boot(){
     addEventListener("pointermove",e=>{mx=e.clientX/innerWidth*2-1;my=e.clientY/innerHeight*2-1},{passive:true});
     addEventListener("scroll",()=>{sy=Math.min(scrollY/innerHeight,1.5)},{passive:true});
     const size=()=>{const w=stageEl.clientWidth,h=stageEl.clientHeight;rd.setSize(w,h);cam.aspect=w/h;
-      const wide=w>=900;grp.position.x=wide?1.9:0;grp.position.y=wide?0.4:0.4;fit=wide?1:Math.max(0.65,h/w*.48);grp.scale.setScalar(fit);cam.updateProjectionMatrix()};
+      const wide=w>=900;grp.position.x=wide?1.9:0;grp.position.y=wide?0:1.6;fit=wide?1:Math.min(1,cam.aspect*4.73*.75/3.9);grp.scale.setScalar(fit);cam.updateProjectionMatrix()};
     addEventListener("resize",size);size();
     let raf=0,vis=true;const t0=performance.now();
     const draw=()=>{raf=0;const t=(performance.now()-t0)/1000;
