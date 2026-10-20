@@ -195,7 +195,7 @@ body.ready .hero .mask>span,.mask.mh.in>span{transform:none}
 <p>Расскажите о своей идее — обсудим вышивку и брендирование для вашего проекта.</p>
 <form id="f" novalidate>
 <div class="f"><label for="n">Имя</label><input id="n" name="name" autocomplete="name" required><span class="err" data-for="n"></span></div>
-<div class="f"><label for="c">Контакт для связи</label><input id="c" name="contact" placeholder="Телефон, e-mail или мессенджер" required><span class="err" data-for="c"></span></div>
+<div class="f"><label for="c">Контакт для связи</label><input id="c" name="contact" placeholder="Телефон или e-mail" required><span class="err" data-for="c"></span></div>
 <div class="f"><label for="t">Тип услуги</label><select id="t" name="service" required><option value="">Выберите…</option></select><span class="err" data-for="t"></span></div>
 <div class="f"><label for="q">Количество изделий</label><input id="q" name="qty" type="number" min="1" max="100000" inputmode="numeric"><span class="err" data-for="q"></span></div>
 <div class="f full"><label for="m">Комментарий к заказу</label><textarea id="m" name="comment" rows="4" maxlength="2000"></textarea></div>
@@ -274,7 +274,7 @@ f.addEventListener("submit",async e=>{
   e.preventDefault();if(busy)return;
   ["n","c","t","q","l","p"].forEach(k=>setErr(k));let ok=true;
   if($("#n").value.trim().length<2){setErr("n","Введите имя (минимум 2 символа)");ok=false}
-  const c=$("#c").value.trim();if(c.length<5){setErr("c","Укажите телефон, e-mail или мессенджер");ok=false}
+  const c=$("#c").value.trim();if(c.length<5){setErr("c","Укажите телефон или e-mail");ok=false}
   if(!$("#t").value){setErr("t","Выберите тип услуги");ok=false}
   const q=$("#q").value;if(q&&(+q<1||!Number.isInteger(+q))){setErr("q","Укажите целое число от 1");ok=false}
   const fl=$("#l").files[0];
