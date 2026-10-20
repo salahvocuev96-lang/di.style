@@ -284,7 +284,7 @@ f.addEventListener("submit",async e=>{
   st.className="show";
   if(!CONFIG.endpoint){st.textContent="Отправка заявок пока не подключена: данные никуда не переданы. Чтобы подключить, укажите URL серверного обработчика в CONFIG.endpoint (ключи и секреты храните только на сервере).";return}
   busy=true;$("#sb").disabled=true;st.textContent="Отправляем…";
-  try{const r=await fetch(CONFIG.endpoint,{method:"POST",body:new FormData(f)});if(!r.ok)throw 0;st.textContent="Заявка отправлена. Мы свяжемся с вами.";f.reset()}
+  try{const r=await fetch(CONFIG.endpoint,{method:"POST",headers:{"Accept":"application/json"},body:new FormData(f)});if(!r.ok)throw 0;st.textContent="Заявка отправлена. Мы свяжемся с вами.";f.reset()}
   catch{st.textContent="Не удалось отправить заявку. Попробуйте ещё раз позже."}
   finally{busy=false;$("#sb").disabled=false}
 });
