@@ -358,8 +358,8 @@ function boot(){
       if(!reduce){tx0+=(mx*.25-tx0)*.05;ty0+=(my*.18-ty0)*.05}
       grp.rotation.y=tx0-.12;grp.rotation.x=-ty0*.9+.06;
       const bs=fit;grp.scale.setScalar(bs*(1+sy*.08));grp.position.z=-sy*.6;
-      const e=reduce?1:1-Math.pow(1-Math.min(t/2.6,1),3); // свет проявляется из темноты, камера подъезжает
-      amb.intensity=.28*e;key.intensity=1.5*e;rim.intensity=.6*e;cam.position.z=7.5+(1-e)*2.2-sy*.9;
+      const e=1;
+      amb.intensity=.28;key.intensity=1.5;rim.intensity=.6;cam.position.z=7.5-sy*.9;
       sw.intensity=reduce?0:1.8*e;sw.position.set(-4+((t%9)/9)*9,.4,1.7); // мягкий скользящий блик
       key.position.x=-3+(reduce?0:Math.sin(t*.4)*.8);
       rd.render(sc,cam);if(vis&&!reduce)raf=requestAnimationFrame(draw)};
