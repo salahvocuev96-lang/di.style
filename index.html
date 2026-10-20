@@ -323,8 +323,8 @@ function noGL(){document.body.classList.add("nogl");stageEl.style.display="none"
 function thread(){ // текстуры: цвет + рельеф стежков
   const S=1024,mk=()=>{const c=document.createElement("canvas");c.width=c.height=S;return c};
   const col=mk(),bmp=mk(),msk=mk(),A=col.getContext("2d"),B=bmp.getContext("2d"),M=msk.getContext("2d");
-  A.fillStyle="#101010";A.fillRect(0,0,S,S);B.fillStyle="#404040";B.fillRect(0,0,S,S);
-  for(let i=0;i<S;i+=4){A.fillStyle=i%8?"#161616":"#0b0b0b";A.fillRect(i,0,2,S);A.fillRect(0,i,S,2);B.fillStyle=i%8?"#505050":"#303030";B.fillRect(i,0,2,S);B.fillRect(0,i,S,2)}
+  A.fillStyle="#07080f";A.fillRect(0,0,S,S);B.fillStyle="#404040";B.fillRect(0,0,S,S);
+  for(let i=0;i<S;i+=4){A.fillStyle=i%8?"#0c0d18":"#050609";A.fillRect(i,0,2,S);A.fillRect(0,i,S,2);B.fillStyle=i%8?"#505060":"#282832";B.fillRect(i,0,2,S);B.fillRect(0,i,S,2)}
   M.fillStyle="#fff";M.font="700 560px Georgia,serif";M.textAlign="center";M.textBaseline="middle";M.fillText("DS",S/2,S/2+20);
   const shade=mk(),H=shade.getContext("2d");H.filter="blur(14px)";H.drawImage(msk,6,10);A.globalAlpha=.8;A.drawImage(shade,0,0);A.globalAlpha=1; // тень под нитью
   const L=mk(),LB=mk(),a=L.getContext("2d"),b=LB.getContext("2d");let sd=7;const r=()=>(sd=(sd*16807)%2147483647)/2147483647;
@@ -348,17 +348,17 @@ function boot(){
     for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),d=Math.min(1,Math.hypot(x,y)/2.4),w=.25+.75*d*d;
       p.setZ(i,w*(.22*Math.sin(x*1.5+y*.6)+.12*Math.sin(y*2.2-x*.8)+.05*Math.sin(x*4+y*3.1))+.08*Math.sin(x*.9)*(1-w))}
     g.computeVertexNormals();
-    const m=new T.MeshStandardMaterial({map:tx,bumpMap:bt,bumpScale:mob?2.2:3.2,roughness:.82,metalness:.12});
+    const m=new T.MeshStandardMaterial({map:tx,bumpMap:bt,bumpScale:mob?2.2:3.2,roughness:.9,metalness:.06});
     const cloth=new T.Mesh(g,m),grp=new T.Group();grp.add(cloth);sc.add(grp);
-    const amb=new T.AmbientLight(0xffffff,.28);sc.add(amb);
-    const key=new T.DirectionalLight(0xfff0d6,1.5);key.position.set(-3,4,5);sc.add(key);
+    const amb=new T.AmbientLight(0xfff4e0,.16);sc.add(amb);
+    const key=new T.DirectionalLight(0xfff0d6,1.9);key.position.set(-3,4,5);sc.add(key);
     const rim=new T.DirectionalLight(0x9fb4d0,.6);rim.position.set(5,-2,2);sc.add(rim);
     const sw=new T.PointLight(0xfff0d6,0,7);sc.add(sw);
     let mx=0,my=0,tx0=0,ty0=0,sy=0,fit=1;
     addEventListener("pointermove",e=>{mx=e.clientX/innerWidth*2-1;my=e.clientY/innerHeight*2-1},{passive:true});
     addEventListener("scroll",()=>{sy=Math.min(scrollY/innerHeight,1.5)},{passive:true});
     const size=()=>{const w=stageEl.clientWidth,h=stageEl.clientHeight;rd.setSize(w,h);cam.aspect=w/h;
-      const wide=w>=900;grp.position.x=wide?1.9:0;grp.position.y=wide?0:1.6;fit=wide?1:Math.min(1,cam.aspect*4.73*.75/3.9);grp.scale.setScalar(fit);cam.updateProjectionMatrix()};
+      const wide=w>=900;grp.position.x=wide?1.9:0;grp.position.y=0;fit=wide?1:1.15;grp.scale.setScalar(fit);cam.updateProjectionMatrix()};
     addEventListener("resize",size);size();
     let raf=0,vis=true;const t0=performance.now();
     const draw=()=>{raf=0;const t=(performance.now()-t0)/1000;
@@ -367,7 +367,7 @@ function boot(){
       grp.rotation.y=tx0-.12-(1-e)*.6;grp.rotation.x=-ty0*.9+.06+(1-e)*.2;
       const bs=fit;grp.scale.setScalar(bs*(1+sy*.08)*(reduce?1:.88+e*.12));grp.position.z=-sy*.6;
       // кинематичный влёт из темноты
-      amb.intensity=.28*e;key.intensity=1.5*e;rim.intensity=.6*e;cam.position.z=7.5+(1-e)*5-sy*.9;
+      amb.intensity=.16*e;key.intensity=1.9*e;rim.intensity=.6*e;cam.position.z=7.5+(1-e)*5-sy*.9;
       sw.intensity=reduce?0:1.8*e;sw.position.set(-4+((t%9)/9)*9,.4,1.7); // мягкий скользящий блик
       key.position.x=-3+(reduce?0:Math.sin(t*.4)*.8);
       rd.render(sc,cam);if(vis&&!reduce)raf=requestAnimationFrame(draw)};
