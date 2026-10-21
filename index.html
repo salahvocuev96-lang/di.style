@@ -85,6 +85,15 @@ input,select,textarea{background:#0f0f0f;border:1px solid var(--line);color:var(
 .err{color:#e8a0a0;font-size:.82rem;min-height:1em}
 #status{grid-column:1/-1;padding:1rem;border:1px solid var(--line);display:none}
 #status.show{display:block}
+.gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-top:3rem}
+.gitem{aspect-ratio:1;overflow:hidden;cursor:pointer;background:var(--bg2);border:1px solid var(--line);position:relative}
+.gitem img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s}
+.gitem:hover img{transform:scale(1.06)}
+.gitem .gph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--line);font-size:2.5rem}
+#lb{display:none;position:fixed;inset:0;background:#000c;z-index:2000;align-items:center;justify-content:center;padding:1rem}
+#lb.open{display:flex}
+#lb img{max-width:90vw;max-height:90vh;object-fit:contain;border:1px solid var(--line)}
+#lb-close{position:absolute;top:1rem;right:1.2rem;background:none;border:none;color:#fff;font-size:2rem;cursor:pointer;line-height:1}
 footer{border-top:1px solid var(--line);padding:4rem 0 2rem;color:var(--mute);font-size:.92rem}
 .fg{display:grid;grid-template-columns:2fr 1fr 1.4fr;gap:3rem}
 footer ul{list-style:none;display:grid;gap:.5rem}footer a:hover{color:var(--ink)}
@@ -92,7 +101,7 @@ footer ul{list-style:none;display:grid;gap:.5rem}footer a:hover{color:var(--ink)
 @media(max-width:900px){
 .menu{position:fixed;inset:4.5rem 0 auto 0;background:#0a0a0af5;flex-direction:column;align-items:flex-start;padding:1.5rem;gap:1.4rem;display:none;border-bottom:1px solid var(--line)}
 .menu.open{display:flex}.burger{display:block}
-.grid4,.steps{grid-template-columns:1fr 1fr}.why,.fg{grid-template-columns:1fr}
+.grid4,.steps{grid-template-columns:1fr 1fr}.why,.fg{grid-template-columns:1fr}.gallery{grid-template-columns:repeat(2,1fr)}
 .work{grid-column:span 12!important}
 .hero .wrap{padding-top:5rem;align-self:end}.hero .copy{background:linear-gradient(transparent,#0a0a0acc 25%)}
 form{grid-template-columns:1fr}
@@ -182,6 +191,12 @@ body.ready .hero .mask>span,.mask.mh.in>span{transform:none}
 <p class="note">Сейчас здесь демонстрационные визуалы. Реальные фотографии подключаются в массиве WORKS в начале скрипта (поле <code>img</code>).</p>
 </div></section>
 
+<section id="gallery-section"><div class="wrap">
+<span class="eyebrow">Галерея</span><h2 class="reveal">Наши работы</h2>
+<div class="gallery" id="gallery"></div>
+</div></section>
+<div id="lb"><button id="lb-close" aria-label="Закрыть">×</button><img id="lb-img" src="" alt=""></div>
+
 <section id="about"><div class="wrap">
 <span class="eyebrow">О студии</span><h2 class="reveal">Детали создают разницу</h2>
 <div class="why" id="why"></div></div></section>
@@ -250,6 +265,26 @@ $("#why").innerHTML=WHY.map(w=>`<div class="reveal"><h3>${w[0]}</h3><p>${w[1]}</
 $("#st").innerHTML=STEPS.map((s,i)=>`<li class="reveal"><b>0${i+1}</b>${s}</li>`).join("");
 $("#t").innerHTML+=SERVICES.map(s=>`<option>${s.t}</option>`).join("");
 $("#ct").innerHTML=[CONFIG.email&&`<li><a href="mailto:${CONFIG.email}">${CONFIG.email}</a></li>`,CONFIG.phone&&`<li>${CONFIG.phone}</li>`,CONFIG.address&&`<li>${CONFIG.address}</li>`,...CONFIG.social.map(x=>`<li><a href="${x.url}" rel="noopener">${x.label}</a></li>`)].filter(Boolean).join("")||"<li>Контакты будут добавлены в CONFIG.</li>";
+/* ===== ГАЛЕРЕЯ ===== */
+const GALLERY=[
+  {img:"",alt:"Работа 1"},
+  {img:"",alt:"Работа 2"},
+  {img:"",alt:"Работа 3"},
+  {img:"",alt:"Работа 4"},
+  {img:"",alt:"Работа 5"},
+  {img:"",alt:"Работа 6"},
+];
+const gl=$("#gallery");
+gl.innerHTML=GALLERY.map((g,i)=>g.img
+  ?`<div class="gitem reveal" data-i="${i}"><img src="${g.img}" alt="${g.alt}" loading="lazy"></div>`
+  :`<div class="gitem reveal" data-i="${i}"><div class="gph">+</div></div>`
+).join("");
+const lb=$("#lb"),lbImg=$("#lb-img");
+const openLb=src=>{lbImg.src=src;lb.classList.add("open")};
+const closeLb=()=>{lb.classList.remove("open");lbImg.src=""};
+gl.addEventListener("click",e=>{const el=e.target.closest(".gitem");if(!el)return;const g=GALLERY[+el.dataset.i];if(g.img)openLb(g.img)});
+$("#lb-close").onclick=closeLb;lb.addEventListener("click",e=>{if(e.target===lb)closeLb()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeLb()});
 $("#yr").textContent=new Date().getFullYear();
 $("#privacy").textContent=CONFIG.privacyText;
 const ov=$("#modal-overlay");
