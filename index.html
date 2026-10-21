@@ -315,9 +315,19 @@ const file=$("#file").files[0];if(file&&file.size>10485760){setErr("file","Фа�
   busy=true;$("#sb").disabled=true;st.textContent="Отправляем…";
   try{
     const msg=`🎉 *НОВЫЙ ЗАКАЗ!*\n\n👤 Имя: ${$("#n").value}\n📞 Контакт: ${$("#c").value}\n✨ Услуга: ${$("#t").value}\n📦 Кол-во: ${$("#q").value||"−"}\n📝 Комментарий: ${$("#m").value||"−"}`;
-    const r=await fetch(`https://api.telegram.org/bot${CONFIG.telegramToken}/sendMessage`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({chat_id:CONFIG.telegramChatId,text:msg,parse_mode:"Markdown"})});
-    const j=await r.json().catch(()=>({}));
-    if(!r.ok)throw j.description||j.error_code||r.status;
+    const r1=await fetch(`https://api.telegram.org/bot${CONFIG.telegramToken}/sendMessage`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({chat_id:CONFIG.telegramChatId,text:msg,parse_mode:"Markdown"})});
+    const j1=await r1.json().catch(()=>({}));
+    if(!r1.ok)throw j1.description||j1.error_code||r1.status;
+    const file=$("#file").files[0];
+    if(file){
+      const reader=new FileReader();
+      reader.onload=async(e)=>{
+        const b64=e.target.result.split(',')[1];
+        const fd=new FormData();fd.append('chat_id',CONFIG.telegramChatId);fd.append('photo',new Blob([Uint8Array.from(atob(b64),c=>c.charCodeAt(0))],{type:file.type}));
+        await fetch(`https://api.telegram.org/bot${CONFIG.telegramToken}/sendPhoto`,{method:"POST",body:fd});
+      };
+      reader.readAsDataURL(file);
+    }
     st.textContent="Заявка отправлена. Мы свяжемся с вами.";f.reset()
   }
   catch(err){st.textContent="Ошибка: "+(err||"не удалось отправить. Попробуйте позже.")}
