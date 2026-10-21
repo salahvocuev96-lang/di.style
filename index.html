@@ -105,6 +105,8 @@ footer ul{list-style:none;display:grid;gap:.5rem}footer a:hover{color:var(--ink)
 .work{grid-column:span 12!important}
 .hero .wrap{padding-top:5rem;align-self:end}.hero .copy{background:linear-gradient(transparent,#0a0a0acc 25%)}
 form{grid-template-columns:1fr}
+body.nogl .hero{background:repeating-linear-gradient(35deg,#191919 0 3px,#0d0d0d 3px 6px)}
+.nogl .fallback{right:auto;left:50%;transform:translate(-50%,-50%);width:min(78vw,360px);border-color:var(--gold);box-shadow:0 0 60px #d9c7a018,inset 0 0 40px #d9c7a008}
 }
 @media(max-width:560px){.grid4,.steps{grid-template-columns:1fr}.btn{width:100%}}
 .dark{position:absolute;inset:0;z-index:1;background:#050505;pointer-events:none;transition:opacity 2.4s ease .1s}
@@ -383,6 +385,7 @@ function thread(){ // текстуры: цвет + рельеф стежков
   A.drawImage(L,0,0);B.drawImage(LB,0,0);return[col,bmp];
 }
 function boot(){
+  if(innerWidth<900)return noGL();
   if(!window.THREE)return noGL();
   try{
     const T=THREE,mob=innerWidth<900;
