@@ -255,7 +255,6 @@ const STEPS=["Обсуждаем идею","Получаем логотип и �
 const $=s=>document.querySelector(s);
 $("#mq").innerHTML=Array(4).fill('ВЫШИВКА ЛОГОТИПОВ <i>—</i> ФАТИН НА БУКЕТ <i>—</i> ЛЕНТА НА БУКЕТ <i>—</i> БРЕНДИРОВАНИЕ ОДЕЖДЫ <i>—</i>').join(" ");
 $("#svc").innerHTML=SERVICES.map(s=>`<article class="card reveal"><div class="thumb ${s.s}" ${s.img?`style="background:url(${s.img}) center/cover;background-size:cover"`:""} role="img" aria-label="${s.t}"></div><h3>${s.t}</h3><p>${s.d}</p><a class="more" href="#order" data-svc="${s.t}">Обсудить →</a></article>`).join("");
-$("#wk").innerHTML=WORKS.map(w=>`<figure class="work reveal" style="grid-column:span ${w.span}"><div class="v ${w.s}" ${w.img?`style="background:url(${w.img}) center/cover"`:""} role="img" aria-label="${w.t}"></div><figcaption class="cap"><b>${w.t}</b><small>${w.d}${w.img?"":" · демо-визуал"}</small></figcaption></figure>`).join("");
 $("#why").innerHTML=WHY.map(w=>`<div class="reveal"><h3>${w[0]}</h3><p>${w[1]}</p></div>`).join("");
 $("#st").innerHTML=STEPS.map((s,i)=>`<li class="reveal"><b>0${i+1}</b>${s}</li>`).join("");
 $("#t").innerHTML+=SERVICES.map(s=>`<option>${s.t}</option>`).join("");
