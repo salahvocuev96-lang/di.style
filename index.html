@@ -228,7 +228,8 @@ body.ready .hero .mask>span,.mask.mh.in>span{transform:none}
 <script>
 /* ===== РЕДАКТИРУЕМЫЕ ДАННЫЕ ===== */
 const CONFIG={
-  endpoint:"https://hook.eu1.make.com/q50sk7y4itm9kmqrwvtkyz6vlwxtbk26",            // URL вашего серверного обработчика заявок (POST, multipart). Пусто = отправка не подключена.
+  telegramToken:"8671705416:AAGwTq0qzob3Y5KJeSnmLaTc5CyTqY76ubU",
+  telegramChatId:-1004373017686,
   email:"alievadiana095@gmail.com",               // публичный e-mail студии (когда будет известен)
   phone:"8 963 593-00-33", address:"", social:[{label:"Telegram",url:"https://t.me/Diana130117"}],
   privacyText:"Политика конфиденциальности DI STYLE\n\nМы собираем только те данные, которые вы сами оставляете в форме заявки: имя, контакт (телефон, e-mail или мессенджер), тип услуги, количество изделий и, при необходимости, файл с логотипом.\n\nДля чего используем: чтобы связаться с вами и обсудить заказ. Ни для чего другого.\n\nКому передаём: никому. Ваши данные не продаются и не передаются третьим лицам.\n\nСколько храним: только пока это нужно для работы с вашим заказом.\n\nЗапоминание формы: сайт сохраняет ваше имя и контакт в памяти вашего браузера (localStorage), чтобы вам не приходилось вводить их повторно. Эти данные хранятся только на вашем устройстве и никуда не отправляются.\n\nВаши права: вы можете в любой момент попросить удалить ваши данные — просто напишите нам.\n\nПо вопросам: свяжитесь с нами через контакты на сайте."
@@ -310,9 +311,15 @@ if(!$("#p").checked){setErr("p","Нужно согласие на обработ
 const file=$("#file").files[0];if(file&&file.size>10485760){setErr("file","Файл слишком большой (макс 10MB)");ok=false}
   if(!ok)return;
   st.className="show";
-  if(!CONFIG.endpoint){st.textContent="Отправка заявок пока не подключена: данные никуда не переданы. Чтобы подключить, укажите URL серверного обработчика в CONFIG.endpoint (ключи и секреты храните только на сервере).";return}
+  if(!CONFIG.telegramToken){st.textContent="Отправка заявок не подключена.";return}
   busy=true;$("#sb").disabled=true;st.textContent="Отправляем…";
-  try{const r=await fetch(CONFIG.endpoint,{method:"POST",headers:{"Accept":"application/json"},body:new FormData(f)});const j=await r.json().catch(()=>({}));if(!r.ok)throw j.error||j.errors?.[0]?.message||r.status;st.textContent="Заявка отправлена. Мы свяжемся с вами.";f.reset()}
+  try{
+    const msg=`🎉 *НОВЫЙ ЗАКАЗ!*\n\n👤 Имя: ${$("#n").value}\n📞 Контакт: ${$("#c").value}\n✨ Услуга: ${$("#t").value}\n📦 Кол-во: ${$("#q").value||"−"}\n📝 Комментарий: ${$("#m").value||"−"}`;
+    const r=await fetch(`https://api.telegram.org/bot${CONFIG.telegramToken}/sendMessage`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({chat_id:CONFIG.telegramChatId,text:msg,parse_mode:"Markdown"})});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok)throw j.description||j.error_code||r.status;
+    st.textContent="Заявка отправлена. Мы свяжемся с вами.";f.reset()
+  }
   catch(err){st.textContent="Ошибка: "+(err||"не удалось отправить. Попробуйте позже.")}
   finally{busy=false;$("#sb").disabled=false}
 });
