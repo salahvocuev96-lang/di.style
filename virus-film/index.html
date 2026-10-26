@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>Вирус: миссия по заражению</title>
+<style>html,body{margin:0;background:#000;color:#ccd;font:14px sans-serif}canvas{display:block;width:100vw;height:auto;max-height:calc(100vh - 40px);object-fit:contain}
+#ui{display:flex;gap:8px;align-items:center;padding:6px}#ui input{flex:1}</style></head>
+<body><canvas id="c"></canvas>
+<div id="ui"><button id="pp">▶</button><input id="sc" type="range" min="0" max="50" step="0.01" value="0"><span id="tt">0.00</span></div>
+<script src="core.js"></script><script src="scenes12.js"></script><script src="scenes34.js"></script><script src="scenes56.js"></script><script src="main.js"></script>
+<script>
+// превью: ?t=12.5 — кадр; кнопка — воспроизведение в реальном времени (может быть медленнее рендера)
+const q = new URLSearchParams(location.search); let t0 = +(q.get('t') || 0), playing = false, last = 0;
+const sc = document.getElementById('sc'), tt = document.getElementById('tt');
+const show = t => { renderFrame(t); sc.value = t; tt.textContent = t.toFixed(2); };
+document.fonts.load('600 40px "Inter Display"').then(() => show(t0));
+sc.oninput = () => { t0 = +sc.value; show(t0); };
+document.getElementById('pp').onclick = () => { playing = !playing; last = performance.now(); if (playing) requestAnimationFrame(loop); };
+function loop(now) { if (!playing) return; t0 = (t0 + (now - last) / 1000) % DUR; last = now; show(t0); requestAnimationFrame(loop); }
+</script></body></html>
