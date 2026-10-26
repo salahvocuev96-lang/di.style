@@ -84,7 +84,7 @@ function scene1(ctx, t) {
   const hp = heroP1(t), hpp = heroP1(t - 1 / FPS);
   const hs = 1100 / hp[2], hx = W / 2 + hp[0] * hs, hy = H / 2 + hp[1] * hs, R = 160 * hs;
   const hv = Math.hypot(hx - (W / 2 + hpp[0] * 1100 / hpp[2]), hy - (H / 2 + hpp[1] * 1100 / hpp[2]));
-  items.push({ z: hp[2], f: () => {
+  if (t < 6.0) items.push({ z: hp[2], f: () => { // после 6.0 героя рисует сцена 2а поверх перехода
     // орбитальные микрочастицы вокруг героя (задняя половина)
     orbit(ctx, hx, hy, R, t, -1);
     drawSprite(ctx, 'glow', PAL.magenta, hx, hy, R * 1.5, 0, .45);
@@ -149,7 +149,7 @@ function scene2a(ctx, t) {
   const bg = ctx.createLinearGradient(0, 0, W, H);
   bg.addColorStop(0, '#0b1240'); bg.addColorStop(1, '#1a0a3a');
   ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
-  const roll = .05 * Math.sin(t * 1.3) - .06 * E.s(seg(t, 7.4, 8.8));
+  const roll = roll2a(t);
   ctx.save(); ctx.translate(W / 2, H / 2); ctx.rotate(roll); ctx.translate(-W / 2, -H / 2);
   shafts(ctx, t, -(t - 6) * 400, [120, 160, 255], .9);
   const [fx, fy] = flow2(t), [fxp, fyp] = flow2(t - .5 / FPS);
@@ -183,9 +183,7 @@ function scene2a(ctx, t) {
     const ap = E.o(seg(t, 6.25 + i * .12, 6.9 + i * .12));
     drawVirus(ctx, dx + Math.cos(a) * rr * (.9 + .1 * Math.sin(t * 2 + i)), dy + Math.sin(a) * rr * .8, hr * .36, { t: t + i, rx: t + i, ry: t * .8 + i, simple: true, alpha: ap * (1 - imp) });
   }
-  const hx = dx + (t > 6.3 ? Math.sin(t * 1.7) * Rd * .08 : 0), hy = dy - Rd * .06 * seg(t, 6.3, 7);
-  drawSprite(ctx, 'glow', PAL.magenta, hx, hy, hr * 1.5, 0, .4);
-  drawVirus(ctx, hx, hy, hr, { t, ...heroRot(t), glow: .8, face: heroLook(t), squash: [1 + .1 * E.o(imp) - .05 * imp * imp, Math.PI / 2] });
+  if (t >= 6.4 && HERO !== 'skip') hero2a(ctx, t);
   // блики и френелевский край капли поверх
   ctx.save(); ctx.translate(dx, dy); ctx.scale((1 + wob) * sqX, (1 - wob) * sqY);
   ctx.globalCompositeOperation = 'lighter';
@@ -209,6 +207,16 @@ function scene2a(ctx, t) {
   ctx.restore();
   caption(ctx, t, 7.0, 8.9, 'путь передачи', 'Респираторная капля', 130, 960, { size: 40 });
   vignette(ctx, .55);
+}
+// плавный переход крена из сцены 1 (её крен в 6.0 = -0.040)
+function roll2a(t) { return .05 * Math.sin(t * 1.3) - .06 * E.s(seg(t, 7.4, 8.8)) - .0899 * (1 - E.s(seg(t, 6.0, 7.0))); }
+function hero2a(ctx, t, rolled) {
+  const [dx, dy] = dropC(t), Rd = dropR(t), hr = heroR2(t), imp = seg(t, 9.0, 9.3);
+  if (rolled) { ctx.save(); ctx.translate(W / 2, H / 2); ctx.rotate(roll2a(t)); ctx.translate(-W / 2, -H / 2); }
+  const hx = dx + (t > 6.3 ? Math.sin(t * 1.7) * Rd * .08 * seg(t, 6.3, 6.8) : 0), hy = dy - Rd * .06 * seg(t, 6.3, 7);
+  drawSprite(ctx, 'glow', PAL.magenta, hx, hy, hr * 1.5, 0, .4);
+  drawVirus(ctx, hx, hy, hr, { t, ...heroRot(t), glow: .8, face: heroLook(t), squash: [1 + .1 * E.o(imp) - .05 * imp * imp, Math.PI / 2] });
+  if (rolled) ctx.restore();
 }
 function drawMucusWall(ctx, t, wy) {
   ctx.save();
@@ -278,12 +286,20 @@ function scene2b(ctx, t) {
   const roll = .04 * Math.sin(t * .9);
   ctx.save(); ctx.translate(W / 2, H / 2); ctx.rotate(roll);
   const toS = (x, y, d) => [(x - cx) / d, (y - cy) / d];
+  const heroB = () => {
+    const [hx, hy] = heroS2(t), [sx, sy] = toS(hx, hy, 1);
+    const na = Math.sin(Math.PI * seg(t, 11.0, 11.8));
+    drawSprite(ctx, 'glow', PAL.magenta, sx, sy, 180, 0, .4);
+    drawVirus(ctx, sx, sy, 124, { t, ...heroRot(t), glow: .7, naGlow: na * 1.5, face: heroLook(t),
+      squash: t > 10.35 && t < 11.5 ? [1 + .05 * Math.sin(t * 20), 0] : [1, 0] });
+  };
+  if (HERO === 'only') { heroB(); ctx.restore(); return; }
   // поверхность слизи и свет сверху
   {
     const [, sy] = toS(0, 0, 1);
     const lg = ctx.createLinearGradient(0, sy - 400, 0, sy + 700);
     lg.addColorStop(0, 'rgba(10,20,60,1)'); lg.addColorStop(.36, 'rgba(10,20,60,1)'); lg.addColorStop(.37, 'rgba(230,220,140,.5)'); lg.addColorStop(.6, 'rgba(160,150,80,.18)'); lg.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = lg; ctx.fillRect(-W, sy - 400, W * 2, 1100);
+    ctx.fillStyle = 'rgba(10,20,60,1)'; ctx.fillRect(-W * 1.5, sy - 3000, W * 3, 2600); ctx.fillStyle = lg; ctx.fillRect(-W * 1.5, sy - 400, W * 3, 1100);
     if (t < 10.2) { // всплеск при входе
       const u = t - 9.0;
       for (let k = 0; k < 2; k++) { ctx.strokeStyle = `rgba(255,250,200,${.5 * (1 - seg(u, 0, 1.2))})`; ctx.lineWidth = 4; ctx.beginPath(); ctx.ellipse(-20 - cx, sy, (u - k * .1) * 700, 18, 0, 0, TAU); ctx.stroke(); }
@@ -346,12 +362,7 @@ function scene2b(ctx, t) {
     ctx.beginPath(); ctx.arc(px, py, 70, ph, ph + 2.2); ctx.stroke();
   }
   cilia(ctx, t, toS, 1, 1, 1);
-  // герой
-  const [hx, hy] = heroS2(t), [sx, sy] = toS(hx, hy, 1);
-  const na = Math.sin(Math.PI * seg(t, 11.0, 11.8));
-  drawSprite(ctx, 'glow', PAL.magenta, sx, sy, 180, 0, .4);
-  drawVirus(ctx, sx, sy, 124, { t, ...heroRot(t), glow: .7, naGlow: na * 1.5, face: heroLook(t),
-    squash: t > 10.35 && t < 11.5 ? [1 + .05 * Math.sin(t * 20), 0] : [1, 0] });
+  if (HERO !== 'skip') heroB();
   if (t > 11.45 && t < 11.75) { // вспышка «ножниц» нейраминидазы
     const u = seg(t, 11.45, 11.75), [qx, qy] = toS(134, 470, 1);
     ctx.save(); ctx.globalCompositeOperation = 'lighter';

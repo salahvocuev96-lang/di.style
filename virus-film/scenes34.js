@@ -74,8 +74,16 @@ function city3(ctx, t, take = 0) { // «живой город»: задний п
     for (let k = -4; k <= 4; k++) { ctx.moveTo(k * m.l * .2, -m.l * .3); ctx.lineTo(k * m.l * .2 + m.l * .08, m.l * .3); } ctx.stroke(); ctx.restore();
   }
 }
+function hero3draw(ctx, t) {
+  const hp = hero3(t), fus = seg(t, 20.75, 21.25), ext = 1 + .55 * E.back(seg(t, 20.15, 20.6)), fadeH = 1 - E.i2(fus);
+  if (fadeH <= 0) return;
+  drawSprite(ctx, 'glow', PAL.magenta, hp[0], hp[1], 170, 0, .35 * fadeH);
+  drawVirus(ctx, hp[0], hp[1], 120 * (1 + fus * .3), { t, ...heroRot(t), ext, glow: .7, alpha: fadeH, face: heroLook(t),
+    squash: t > 15.9 && t < 16.4 ? [1 - .08 * Math.sin(seg(t, 15.9, 16.4) * Math.PI), Math.PI / 2] : null });
+}
 function scene3(ctx, t) {
   const c = cam3(t);
+  if (HERO === 'only') { ctx.save(); camT(ctx, c); hero3draw(ctx, t); ctx.restore(); return; }
   ctx.fillStyle = '#120a35'; ctx.fillRect(0, 0, W, H);
   // задний план: внутренности клетки (глубже, с параллаксом и размытием)
   softLayer(ctx, s => { camT(s, c, 1.7); s.translate(c.x * (1 - 1 / 1.7), c.y * (1 - 1 / 1.7)); city3(s, t); }, 2.2, .85);
@@ -161,12 +169,7 @@ function scene3(ctx, t) {
   }
   // герой
   const ext = 1 + .55 * E.back(seg(t, 20.15, 20.6));
-  const fadeH = 1 - E.i2(fus);
-  if (fadeH > 0) {
-    drawSprite(ctx, 'glow', PAL.magenta, hp[0], hp[1], 170, 0, .35 * fadeH);
-    drawVirus(ctx, hp[0], hp[1], 120 * (1 + fus * .3), { t, ...heroRot(t), ext, glow: .7, alpha: fadeH, face: heroLook(t),
-      squash: t > 15.9 && t < 16.4 ? [1 - .08 * Math.sin(seg(t, 15.9, 16.4) * Math.PI), Math.PI / 2] : null });
-  }
+  if (HERO !== 'skip') hero3draw(ctx, t);
   // вспышки сцепления
   if (t > 15.9 && t < 16.6) {
     const u = seg(t, 15.95, 16.6);
@@ -272,7 +275,7 @@ function scene4(ctx, t) {
   for (const m of C4.mt) { if (m.length < 2) continue; ctx.beginPath(); m.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.stroke(); }
   for (const v of C4.ves) {
     const m = C4.mt[v.m]; if (m.length < 2) continue;
-    const ph = (v.ph + (t - 22) * v.sp * (1 - .85 * take)) % 1, u = ph * (m.length - 1), i = Math.floor(u), f = u - i;
+    const ph = ((v.ph + (t - 22) * v.sp * (1 - .85 * take)) % 1 + 1) % 1, u = ph * (m.length - 1), i = Math.floor(u), f = u - i;
     const x = lerp(m[i][0], m[Math.min(m.length - 1, i + 1)][0], f), y = lerp(m[i][1], m[Math.min(m.length - 1, i + 1)][1], f);
     drawSprite(ctx, 'ball', PAL.teal, x, y, v.s, 0, 1 - .7 * take);
   }

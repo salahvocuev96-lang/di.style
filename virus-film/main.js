@@ -3,6 +3,7 @@
 const canvas = document.getElementById('c'); canvas.width = W; canvas.height = H;
 const mainCtx = canvas.getContext('2d');
 const bufA = mk(), ctxA = bufA.getContext('2d'), subBuf = mk(), subCtx = subBuf.getContext('2d');
+const heroBuf = mk(), heroCtx = heroBuf.getContext('2d');
 const CUTS = [ // [начало перехода, конец, сцена A, сцена B]
   [6.0, 6.4, scene1, scene2a], [9.15, 9.45, scene2a, scene2b], [13.75, 14.15, scene2b, scene3],
   [21.95, 22.35, scene3, scene4], [31.85, 32.08, scene4, scene5],
@@ -16,9 +17,16 @@ function renderAt(ctx, t) {
   if (t >= 42.0) { scene6(ctx, t, (c, tt) => { c.setTransform(1, 0, 0, 1, 0, 0); scene5(c, tt); }); return; }
   for (const [a, b, A, B] of CUTS) {
     if (t >= a && t < b) {
-      ctxA.setTransform(1, 0, 0, 1, 0, 0); A(ctxA, t);
+      const heroCut = B === scene2b || B === scene3; // герой в обеих сценах: без «двойника» на склейке
+      ctxA.setTransform(1, 0, 0, 1, 0, 0); if (heroCut) HERO = 'skip'; A(ctxA, t); HERO = 'all';
       B(ctx, t);
-      ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1 - E.s(seg(t, a, b)); ctx.drawImage(bufA, 0, 0); ctx.globalAlpha = 1;
+      const u = E.s(seg(t, a, b));
+      ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1 - u; ctx.drawImage(bufA, 0, 0); ctx.globalAlpha = 1;
+      if (heroCut) {
+        heroCtx.setTransform(1, 0, 0, 1, 0, 0); heroCtx.clearRect(0, 0, W, H); HERO = 'only'; B(heroCtx, t); HERO = 'all';
+        ctx.globalAlpha = 1 - u; ctx.drawImage(heroBuf, 0, 0); ctx.globalAlpha = 1;
+      }
+      if (A === scene1) hero2a(ctx, t, true); // герой непрерывен поверх перехода «в каплю»
       return;
     }
   }
