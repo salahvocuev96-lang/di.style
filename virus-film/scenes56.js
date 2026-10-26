@@ -91,7 +91,7 @@ function scene5(ctx, t) {
     if (b.lead && t > 41.0) face.mood = 'worry';
     if (t < b.pinch) {
       // ещё в мембране: клип по линии мембраны
-      ctx.save(); ctx.beginPath(); ctx.rect(x - 400, y - 400, 800, cellTop5(b.x) - y + 400 - 4); ctx.clip();
+      ctx.save(); ctx.beginPath(); ctx.rect(x - 400, y - 400, 800, cellTop5(b.x) - y + 400 + 8); ctx.clip();
       drawVirus(ctx, x, y, R, { t: t + b.ph, rx: .2, ry: b.ph, face: seg(t, b.pinch - .6, b.pinch) > 0 ? { ...face, lid: lerp(1, .38, seg(t, b.pinch - .5, b.pinch - .1)) } : null });
       ctx.restore();
     } else {

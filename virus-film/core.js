@@ -285,6 +285,11 @@ function drawFace(ctx, R, f, t) {
   const mood = f.mood || 'smug';
   for (const s of [-1, 1]) {
     const ex = lx + s * gap, ey = ly - R * .08;
+    if (lidBase > .88 && mood !== 'shock') { // закрытый глаз — дуга ресниц, а не тёмный кружок
+      ctx.strokeStyle = '#20063f'; ctx.lineWidth = er * .22; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.arc(ex, ey - er * .2, er * .9, .25 * Math.PI, .75 * Math.PI); ctx.stroke();
+      continue;
+    }
     ctx.save(); ctx.translate(ex, ey);
     ctx.fillStyle = '#20063f'; ctx.beginPath(); ctx.ellipse(0, 0, er * 1.12, er * 1.22, 0, 0, TAU); ctx.fill();
     ctx.beginPath(); ctx.ellipse(0, 0, er, er * 1.1, 0, 0, TAU); ctx.save(); ctx.clip();
