@@ -429,5 +429,41 @@ const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/aja
 s.onload=boot;s.onerror=noGL;
 requestAnimationFrame(()=>setTimeout(()=>document.head.appendChild(s),0));
 </script>
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import{getFirestore,doc,getDoc,collection,getDocs}from"https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+const _fc={apiKey:"AIzaSyCqpgFBXGKghBue7Dq1whc-ZXBaiV2z3Sk",authDomain:"di-style.firebaseapp.com",projectId:"di-style",storageBucket:"di-style.firebasestorage.app",messagingSenderId:"424780945124",appId:"1:424780945124:web:d654f0a7c311aa6206bef1"};
+try{
+const _app=initializeApp(_fc);
+const _db=getFirestore(_app);
+// Load gallery from Firebase
+getDocs(collection(_db,'gallery')).then(snap=>{
+  if(snap.empty)return;
+  const items=[];
+  snap.forEach(d=>items.push({id:d.id,...d.data()}));
+  items.sort((a,b)=>(a.order||0)-(b.order||0));
+  const gl=document.getElementById("gallery");
+  if(!gl)return;
+  const lbImg=document.getElementById("lbImg");
+  const lb=document.getElementById("lb");
+  const imgs=items.map(g=>g.url||'');
+  gl.innerHTML=items.map((g,i)=>g.url?`<div class="gitem" data-i="${i}" style="cursor:pointer"><img src="${g.url}" alt="${g.desc||''}" loading="lazy" style="width:100%;height:100%;object-fit:cover"></div>`:`<div class="gitem" data-i="${i}"></div>`).join('');
+  gl.addEventListener("click",e=>{
+    const el=e.target.closest(".gitem");
+    if(!el)return;
+    const src=imgs[+el.dataset.i];
+    if(src&&lbImg&&lb){lbImg.src=src;lb.classList.add("open");}
+  });
+}).catch(()=>{});
+// Load contacts from Firebase
+getDoc(doc(_db,'config','contacts')).then(snap=>{
+  if(!snap.exists())return;
+  const d=snap.data();
+  const ct=document.getElementById("ct");
+  if(!ct)return;
+  ct.innerHTML=[d.email&&`<li><a href="mailto:${d.email}">${d.email}</a></li>`,d.phone&&`<li>${d.phone}</li>`,d.address&&`<li>${d.address}</li>`,...(d.social||[]).map(x=>`<li><a href="${x.url}" rel="noopener">${x.label}</a></li>`)].filter(Boolean).join('');
+}).catch(()=>{});
+}catch(e){}
+</script>
 </body>
 </html>

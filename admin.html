@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>di.style — Панель управления</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--gold:#d9c7a0;--bg:#0a0a0a;--bg2:#111;--bg3:#1a1a1a;--border:#2a2a2a;--text:#e0e0e0;--red:#c44;--green:#4a4}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+a{color:var(--gold);text-decoration:none}
+
+/* LOGIN */
+#login{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.login-box{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:40px;width:100%;max-width:360px;text-align:center}
+.login-box h1{color:var(--gold);font-size:1.6rem;letter-spacing:3px;margin-bottom:8px}
+.login-box p{color:#888;font-size:.85rem;margin-bottom:30px}
+.login-box input{width:100%;padding:12px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:1rem;margin-bottom:16px;outline:none;transition:border .2s}
+.login-box input:focus{border-color:var(--gold)}
+.btn{width:100%;padding:12px;background:var(--gold);color:#000;border:none;border-radius:8px;font-size:1rem;font-weight:600;cursor:pointer;transition:opacity .2s}
+.btn:hover{opacity:.85}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.err{color:var(--red);font-size:.85rem;margin-top:8px;min-height:20px}
+
+/* DASHBOARD */
+#dash{display:none;flex-direction:column;min-height:100vh}
+header{background:var(--bg2);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between}
+header h1{color:var(--gold);font-size:1.2rem;letter-spacing:2px}
+header button{background:none;border:1px solid var(--border);color:#888;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:.8rem;transition:all .2s}
+header button:hover{border-color:var(--gold);color:var(--gold)}
+.tabs{display:flex;border-bottom:1px solid var(--border);background:var(--bg2)}
+.tab{padding:14px 24px;cursor:pointer;color:#888;font-size:.9rem;border-bottom:2px solid transparent;transition:all .2s;user-select:none}
+.tab.active,.tab:hover{color:var(--gold)}
+.tab.active{border-bottom-color:var(--gold)}
+.panel{flex:1;padding:24px;display:none;max-width:960px;width:100%}
+.panel.active{display:block}
+
+/* SECTION */
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.section-head h2{font-size:1rem;color:var(--gold);letter-spacing:1px}
+.btn-sm{padding:8px 16px;background:var(--gold);color:#000;border:none;border-radius:6px;font-size:.85rem;font-weight:600;cursor:pointer;transition:opacity .2s;white-space:nowrap}
+.btn-sm:hover{opacity:.85}
+.btn-sm.outline{background:none;color:var(--gold);border:1px solid var(--gold)}
+.btn-sm.danger{background:none;color:var(--red);border:1px solid var(--red)}
+.btn-sm.danger:hover{background:var(--red);color:#fff}
+
+/* GALLERY GRID */
+.gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
+.gallery-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.gallery-card img{width:100%;height:160px;object-fit:cover;display:block}
+.gallery-card .no-img{width:100%;height:160px;display:flex;align-items:center;justify-content:center;color:#444;font-size:.8rem;background:var(--bg3)}
+.gallery-card-body{padding:12px}
+.gallery-card-body p{font-size:.8rem;color:#888;margin-bottom:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gallery-card-actions{display:flex;gap:8px}
+
+/* SERVICE CARDS */
+.service-list{display:flex;flex-direction:column;gap:12px}
+.service-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;display:flex;gap:16px;align-items:flex-start}
+.service-thumb{width:80px;height:80px;object-fit:cover;border-radius:8px;flex-shrink:0;background:var(--bg3)}
+.service-info{flex:1}
+.service-info h3{font-size:.95rem;margin-bottom:4px}
+.service-info p{font-size:.8rem;color:#888;line-height:1.4}
+.service-actions{display:flex;flex-direction:column;gap:8px;flex-shrink:0}
+
+/* CONTACTS */
+.contact-form{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:24px}
+.field{margin-bottom:18px}
+.field label{display:block;font-size:.8rem;color:#888;margin-bottom:6px}
+.field input,.field textarea{width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.9rem;outline:none;transition:border .2s;font-family:inherit}
+.field input:focus,.field textarea:focus{border-color:var(--gold)}
+.field textarea{resize:vertical;min-height:80px}
+.social-list{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.social-row{display:flex;gap:10px;align-items:center}
+.social-row input{flex:1}
+.add-social{background:none;border:1px dashed var(--border);color:#666;padding:8px;border-radius:8px;cursor:pointer;width:100%;font-size:.85rem;transition:all .2s}
+.add-social:hover{border-color:var(--gold);color:var(--gold)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:28px;width:100%;max-width:480px}
+.modal h3{font-size:1rem;margin-bottom:20px;color:var(--gold)}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+.img-preview{width:100%;height:200px;object-fit:cover;border-radius:8px;margin-bottom:14px;display:none}
+.upload-zone{border:2px dashed var(--border);border-radius:8px;padding:30px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:14px}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--gold);background:rgba(217,199,160,.05)}
+.upload-zone p{color:#666;font-size:.85rem}
+.upload-zone strong{color:var(--gold)}
+
+/* STATUS TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 20px;font-size:.85rem;z-index:200;transform:translateY(80px);opacity:0;transition:all .3s;max-width:300px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.ok{border-color:var(--green);color:var(--green)}
+.toast.fail{border-color:var(--red);color:var(--red)}
+
+/* SPINNER */
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-state{text-align:center;padding:40px;color:#555}
+
+@media(max-width:600px){
+  .tabs{overflow-x:auto}.tab{white-space:nowrap}
+  .gallery-grid{grid-template-columns:1fr 1fr}
+  .service-card{flex-direction:column}
+  .service-actions{flex-direction:row}
+  .panel{padding:16px}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login">
+  <div class="login-box">
+    <h1>di.style</h1>
+    <p>Панель управления</p>
+    <input type="password" id="pwd" placeholder="Введите пароль" autocomplete="current-password">
+    <button class="btn" id="loginBtn" onclick="doLogin()">Войти</button>
+    <div class="err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dash">
+  <header>
+    <h1>di.style — управление</h1>
+    <button onclick="logout()">Выйти</button>
+  </header>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('gallery',this)">Галерея</div>
+    <div class="tab" onclick="switchTab('services',this)">Услуги</div>
+    <div class="tab" onclick="switchTab('contacts',this)">Контакты</div>
+  </div>
+
+  <!-- GALLERY TAB -->
+  <div class="panel active" id="tab-gallery">
+    <div class="section-head">
+      <h2>ГАЛЕРЕЯ РАБОТ</h2>
+      <button class="btn-sm" onclick="openAddPhoto()">+ Добавить фото</button>
+    </div>
+    <div class="gallery-grid" id="galleryGrid">
+      <div class="loading-state"><span class="spinner"></span>Загрузка...</div>
+    </div>
+  </div>
+
+  <!-- SERVICES TAB -->
+  <div class="panel" id="tab-services">
+    <div class="section-head">
+      <h2>УСЛУГИ</h2>
+    </div>
+    <div class="service-list" id="serviceList">
+      <div class="loading-state"><span class="spinner"></span>Загрузка...</div>
+    </div>
+  </div>
+
+  <!-- CONTACTS TAB -->
+  <div class="panel" id="tab-contacts">
+    <div class="section-head">
+      <h2>КОНТАКТЫ</h2>
+      <button class="btn-sm" onclick="saveContacts()">Сохранить</button>
+    </div>
+    <div class="contact-form">
+      <div class="field">
+        <label>Телефон</label>
+        <input type="text" id="cf-phone" placeholder="8 xxx xxx-xx-xx">
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="cf-email" placeholder="example@mail.ru">
+      </div>
+      <div class="field">
+        <label>Адрес (необязательно)</label>
+        <input type="text" id="cf-address" placeholder="Город, улица">
+      </div>
+      <div class="field">
+        <label>Ссылки (Telegram, VK, Instagram и др.)</label>
+        <div class="social-list" id="socialList"></div>
+        <button class="add-social" onclick="addSocialRow()">+ Добавить ссылку</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="addPhotoModal">
+  <div class="modal">
+    <h3>Добавить фото в галерею</h3>
+    <img class="img-preview" id="addPhotoPreview">
+    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('photoFileInput').click()"
+         ondragover="event.preventDefault();this.classList.add('drag')"
+         ondragleave="this.classList.remove('drag')"
+         ondrop="handleDrop(event)">
+      <strong>Нажмите или перетащите фото</strong>
+      <p>JPG, PNG, WebP — до 10 МБ</p>
+    </div>
+    <input type="file" id="photoFileInput" accept="image/*" style="display:none" onchange="handleFileSelect(this)">
+    <div class="field">
+      <label>Описание (необязательно)</label>
+      <input type="text" id="addPhotoDesc" placeholder="Например: Вышивка на кепке">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-sm outline" onclick="closeModal('addPhotoModal')">Отмена</button>
+      <button class="btn-sm" id="addPhotoBtn" onclick="uploadPhoto()">Загрузить</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="editServiceModal">
+  <div class="modal">
+    <h3>Редактировать услугу</h3>
+    <img class="img-preview" id="editSvcPreview">
+    <div class="upload-zone" id="svcUploadZone" onclick="document.getElementById('svcFileInput').click()"
+         ondragover="event.preventDefault();this.classList.add('drag')"
+         ondragleave="this.classList.remove('drag')"
+         ondrop="handleSvcDrop(event)">
+      <strong>Сменить фото</strong>
+      <p>JPG, PNG, WebP — до 10 МБ</p>
+    </div>
+    <input type="file" id="svcFileInput" accept="image/*" style="display:none" onchange="handleSvcFileSelect(this)">
+    <div class="field">
+      <label>Название</label>
+      <input type="text" id="es-title">
+    </div>
+    <div class="field">
+      <label>Описание</label>
+      <textarea id="es-desc" rows="3"></textarea>
+    </div>
+    <input type="hidden" id="es-id">
+    <div class="modal-actions">
+      <button class="btn-sm outline" onclick="closeModal('editServiceModal')">Отмена</button>
+      <button class="btn-sm" onclick="saveService()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal">
+    <h3 id="confirmTitle">Подтверждение</h3>
+    <p id="confirmText" style="color:#888;font-size:.9rem"></p>
+    <div class="modal-actions">
+      <button class="btn-sm outline" onclick="closeModal('confirmModal')">Отмена</button>
+      <button class="btn-sm danger" id="confirmOkBtn">Удалить</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, collection, getDocs, addDoc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-storage.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCqpgFBXGKghBue7Dq1whc-ZXBaiV2z3Sk",
+  authDomain: "di-style.firebaseapp.com",
+  projectId: "di-style",
+  storageBucket: "di-style.firebasestorage.app",
+  messagingSenderId: "424780945124",
+  appId: "1:424780945124:web:d654f0a7c311aa6206bef1",
+  measurementId: "G-JQ6PYBN20T"
+};
+
+const PASSWORD = "DiStyle@2026!#";
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+let currentSvcFile = null;
+let currentPhotoFile = null;
+let galleryItems = [];
+
+// ── AUTH ────────────────────────────────────────────────
+window.doLogin = () => {
+  const pwd = document.getElementById('pwd').value;
+  const err = document.getElementById('loginErr');
+  if (pwd === PASSWORD) {
+    sessionStorage.setItem('admin_auth','1');
+    document.getElementById('login').style.display = 'none';
+    document.getElementById('dash').style.display = 'flex';
+    initDashboard();
+  } else {
+    err.textContent = 'Неверный пароль';
+    document.getElementById('pwd').style.borderColor = 'var(--red)';
+    setTimeout(() => { err.textContent = ''; document.getElementById('pwd').style.borderColor = ''; }, 2500);
+  }
+};
+
+window.logout = () => {
+  sessionStorage.removeItem('admin_auth');
+  location.reload();
+};
+
+document.getElementById('pwd').addEventListener('keydown', e => { if(e.key==='Enter') window.doLogin(); });
+
+if (sessionStorage.getItem('admin_auth') === '1') {
+  document.getElementById('login').style.display = 'none';
+  document.getElementById('dash').style.display = 'flex';
+  initDashboard();
+}
+
+// ── TABS ────────────────────────────────────────────────
+window.switchTab = (name, el) => {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+};
+
+// ── INIT ────────────────────────────────────────────────
+async function initDashboard() {
+  loadGallery();
+  loadServices();
+  loadContacts();
+}
+
+// ── TOAST ───────────────────────────────────────────────
+function toast(msg, type='ok') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => { t.className = 'toast'; }, 3000);
+}
+
+// ── MODAL ───────────────────────────────────────────────
+window.closeModal = (id) => document.getElementById(id).classList.remove('open');
+
+// ── GALLERY ─────────────────────────────────────────────
+async function loadGallery() {
+  const grid = document.getElementById('galleryGrid');
+  grid.innerHTML = '<div class="loading-state"><span class="spinner"></span>Загрузка...</div>';
+  try {
+    const snap = await getDocs(collection(db, 'gallery'));
+    galleryItems = [];
+    snap.forEach(d => galleryItems.push({id: d.id, ...d.data()}));
+    galleryItems.sort((a,b) => (a.order||0) - (b.order||0));
+    renderGallery();
+  } catch(e) {
+    grid.innerHTML = '<div class="loading-state" style="color:var(--red)">Ошибка загрузки. Проверьте Firebase.</div>';
+  }
+}
+
+function renderGallery() {
+  const grid = document.getElementById('galleryGrid');
+  if (!galleryItems.length) {
+    grid.innerHTML = '<div class="loading-state">Галерея пуста. Добавьте первое фото.</div>';
+    return;
+  }
+  grid.innerHTML = galleryItems.map(item => `
+    <div class="gallery-card">
+      ${item.url ? `<img src="${item.url}" alt="${item.desc||''}">` : '<div class="no-img">Нет фото</div>'}
+      <div class="gallery-card-body">
+        <p>${item.desc || 'Без описания'}</p>
+        <div class="gallery-card-actions">
+          <button class="btn-sm danger" style="flex:1" onclick="deletePhoto('${item.id}','${item.storagePath||''}')">Удалить</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+window.openAddPhoto = () => {
+  currentPhotoFile = null;
+  document.getElementById('addPhotoPreview').style.display = 'none';
+  document.getElementById('addPhotoDesc').value = '';
+  document.getElementById('photoFileInput').value = '';
+  document.getElementById('addPhotoModal').classList.add('open');
+};
+
+window.handleDrop = (e) => {
+  e.preventDefault();
+  document.getElementById('uploadZone').classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) setPhotoFile(file);
+};
+
+window.handleFileSelect = (input) => {
+  if (input.files[0]) setPhotoFile(input.files[0]);
+};
+
+function setPhotoFile(file) {
+  currentPhotoFile = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const prev = document.getElementById('addPhotoPreview');
+    prev.src = e.target.result;
+    prev.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+window.uploadPhoto = async () => {
+  if (!currentPhotoFile) { toast('Выберите фото', 'fail'); return; }
+  const btn = document.getElementById('addPhotoBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Загрузка...';
+  try {
+    const name = Date.now() + '_' + currentPhotoFile.name.replace(/[^a-z0-9._-]/gi,'_');
+    const storageRef = ref(storage, 'gallery/' + name);
+    await uploadBytes(storageRef, currentPhotoFile);
+    const url = await getDownloadURL(storageRef);
+    const desc = document.getElementById('addPhotoDesc').value.trim();
+    await addDoc(collection(db, 'gallery'), {
+      url, desc, storagePath: 'gallery/' + name, order: Date.now()
+    });
+    closeModal('addPhotoModal');
+    toast('Фото добавлено!');
+    loadGallery();
+  } catch(e) {
+    toast('Ошибка: ' + e.message, 'fail');
+  }
+  btn.disabled = false;
+  btn.textContent = 'Загрузить';
+};
+
+window.deletePhoto = (id, path) => {
+  document.getElementById('confirmTitle').textContent = 'Удалить фото?';
+  document.getElementById('confirmText').textContent = 'Это действие нельзя отменить.';
+  document.getElementById('confirmModal').classList.add('open');
+  document.getElementById('confirmOkBtn').onclick = async () => {
+    closeModal('confirmModal');
+    try {
+      await deleteDoc(doc(db, 'gallery', id));
+      if (path) await deleteObject(ref(storage, path)).catch(() => {});
+      toast('Фото удалено');
+      loadGallery();
+    } catch(e) {
+      toast('Ошибка удаления', 'fail');
+    }
+  };
+};
+
+// ── SERVICES ────────────────────────────────────────────
+async function loadServices() {
+  const list = document.getElementById('serviceList');
+  try {
+    const snap = await getDocs(collection(db, 'services'));
+    let services = [];
+    snap.forEach(d => services.push({id: d.id, ...d.data()}));
+    if (!services.length) {
+      // Load defaults from main site config
+      services = getDefaultServices();
+      for (const s of services) {
+        await setDoc(doc(db, 'services', s.id), {title: s.t, desc: s.d, img: s.img||'', cssClass: s.s||'', order: s.order||0});
+      }
+      const snap2 = await getDocs(collection(db, 'services'));
+      services = [];
+      snap2.forEach(d => services.push({id: d.id, ...d.data()}));
+    }
+    services.sort((a,b) => (a.order||0) - (b.order||0));
+    renderServices(services);
+  } catch(e) {
+    list.innerHTML = '<div class="loading-state" style="color:var(--red)">Ошибка загрузки</div>';
+  }
+}
+
+function getDefaultServices() {
+  return [
+    {id:'svc1',t:'Вышивка на заказ',d:'Любые логотипы, надписи и рисунки',s:'svc-emb',img:'',order:1},
+    {id:'svc2',t:'Нашивки и патчи',d:'Тканевые нашивки для одежды и аксессуаров',s:'svc-patch',img:'',order:2},
+    {id:'svc3',t:'Корпоративная символика',d:'Брендирование рабочей одежды и сувениров',s:'svc-corp',img:'',order:3},
+    {id:'svc4',t:'Персонализация',d:'Имена, даты, памятные надписи',s:'svc-pers',img:'',order:4},
+  ];
+}
+
+function renderServices(services) {
+  const list = document.getElementById('serviceList');
+  list.innerHTML = services.map(s => `
+    <div class="service-card">
+      ${s.img ? `<img class="service-thumb" src="${s.img}" alt="${s.title||''}">` : '<div class="service-thumb" style="display:flex;align-items:center;justify-content:center;color:#444;font-size:.75rem">Нет фото</div>'}
+      <div class="service-info">
+        <h3>${s.title||''}</h3>
+        <p>${s.desc||''}</p>
+      </div>
+      <div class="service-actions">
+        <button class="btn-sm outline" onclick="openEditService('${s.id}','${(s.title||'').replace(/'/g,"\\'")}','${(s.desc||'').replace(/'/g,"\\'")}','${s.img||''}')">Изменить</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+window.openEditService = (id, title, desc, img) => {
+  document.getElementById('es-id').value = id;
+  document.getElementById('es-title').value = title;
+  document.getElementById('es-desc').value = desc;
+  currentSvcFile = null;
+  const prev = document.getElementById('editSvcPreview');
+  if (img) { prev.src = img; prev.style.display = 'block'; }
+  else { prev.style.display = 'none'; }
+  document.getElementById('svcFileInput').value = '';
+  document.getElementById('editServiceModal').classList.add('open');
+};
+
+window.handleSvcDrop = (e) => {
+  e.preventDefault();
+  document.getElementById('svcUploadZone').classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) setSvcFile(file);
+};
+window.handleSvcFileSelect = (input) => {
+  if (input.files[0]) setSvcFile(input.files[0]);
+};
+function setSvcFile(file) {
+  currentSvcFile = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const prev = document.getElementById('editSvcPreview');
+    prev.src = e.target.result;
+    prev.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+window.saveService = async () => {
+  const id = document.getElementById('es-id').value;
+  const title = document.getElementById('es-title').value.trim();
+  const desc = document.getElementById('es-desc').value.trim();
+  try {
+    let imgUrl = '';
+    if (currentSvcFile) {
+      const name = 'services/' + Date.now() + '_' + currentSvcFile.name.replace(/[^a-z0-9._-]/gi,'_');
+      const storageRef = ref(storage, name);
+      await uploadBytes(storageRef, currentSvcFile);
+      imgUrl = await getDownloadURL(storageRef);
+    }
+    const update = {title, desc};
+    if (imgUrl) update.img = imgUrl;
+    await updateDoc(doc(db, 'services', id), update);
+    closeModal('editServiceModal');
+    toast('Услуга обновлена!');
+    loadServices();
+  } catch(e) {
+    toast('Ошибка: ' + e.message, 'fail');
+  }
+};
+
+// ── CONTACTS ────────────────────────────────────────────
+async function loadContacts() {
+  try {
+    const snap = await getDoc(doc(db, 'config', 'contacts'));
+    let data = snap.exists() ? snap.data() : {phone:'8 963 593-00-33', email:'alievadiana095@gmail.com', address:'', social:[{label:'Telegram',url:'https://t.me/Diana130117'},{label:'Telegram канал',url:'https://t.me/+311n55m7qrs3ZWYy'}]};
+    document.getElementById('cf-phone').value = data.phone || '';
+    document.getElementById('cf-email').value = data.email || '';
+    document.getElementById('cf-address').value = data.address || '';
+    renderSocialRows(data.social || []);
+  } catch(e) {
+    toast('Ошибка загрузки контактов', 'fail');
+  }
+}
+
+function renderSocialRows(items) {
+  const list = document.getElementById('socialList');
+  list.innerHTML = items.map((item,i) => `
+    <div class="social-row">
+      <input type="text" placeholder="Название (Telegram)" value="${item.label||''}" data-idx="${i}" data-field="label">
+      <input type="text" placeholder="Ссылка (https://...)" value="${item.url||''}" data-idx="${i}" data-field="url" style="flex:2">
+      <button class="btn-sm danger" onclick="removeSocialRow(${i})">×</button>
+    </div>
+  `).join('');
+}
+
+window.addSocialRow = () => {
+  const rows = getSocialData();
+  rows.push({label:'',url:''});
+  renderSocialRows(rows);
+};
+
+window.removeSocialRow = (idx) => {
+  const rows = getSocialData();
+  rows.splice(idx, 1);
+  renderSocialRows(rows);
+};
+
+function getSocialData() {
+  const rows = [];
+  document.querySelectorAll('.social-row').forEach(row => {
+    const inputs = row.querySelectorAll('input');
+    rows.push({label: inputs[0].value, url: inputs[1].value});
+  });
+  return rows;
+}
+
+window.saveContacts = async () => {
+  const data = {
+    phone: document.getElementById('cf-phone').value.trim(),
+    email: document.getElementById('cf-email').value.trim(),
+    address: document.getElementById('cf-address').value.trim(),
+    social: getSocialData().filter(s => s.url),
+  };
+  try {
+    await setDoc(doc(db, 'config', 'contacts'), data);
+    toast('Контакты сохранены!');
+  } catch(e) {
+    toast('Ошибка: ' + e.message, 'fail');
+  }
+};
+</script>
+</body>
+</html>
