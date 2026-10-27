@@ -79,10 +79,16 @@ header button:hover{border-color:var(--gold);color:var(--gold)}
 .upload-zone:hover,.upload-zone.drag{border-color:var(--gold);background:rgba(217,199,160,.05)}
 .upload-zone p{color:#666;font-size:.85rem;margin-top:6px}
 .upload-zone strong{color:var(--gold)}
-.upload-progress{margin-bottom:14px;display:none}
-.upload-progress p{font-size:.8rem;color:#888;margin-bottom:6px}
-.progress-bar{height:4px;background:var(--border);border-radius:2px}
-.progress-fill{height:100%;background:var(--gold);border-radius:2px;transition:width .3s}
+.cropper{position:relative;width:100%;overflow:hidden;border:1px solid var(--border);border-radius:8px;background:#000;touch-action:none;cursor:grab;margin-bottom:10px;display:none}
+.cropper.show{display:block}
+.cropper.grabbing{cursor:grabbing}
+.cropper img{position:absolute;left:0;top:0;max-width:none;transform-origin:0 0;user-select:none;-webkit-user-drag:none;pointer-events:none}
+.crop-zoom{display:none;align-items:center;gap:12px;margin-bottom:8px}
+.crop-zoom.show{display:flex}
+.crop-zoom b{color:#888;font-size:1.1rem;width:14px;text-align:center;user-select:none;font-weight:400}
+.crop-zoom input[type=range]{flex:1;accent-color:var(--gold);background:transparent;cursor:pointer}
+.crop-hint{display:none;font-size:.75rem;color:#777;margin-bottom:14px;text-align:center}
+.crop-hint.show{display:block}
 
 .toast{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 20px;font-size:.85rem;z-index:200;transform:translateY(80px);opacity:0;transition:all .3s;max-width:300px}
 .toast.show{transform:translateY(0);opacity:1}
@@ -178,21 +184,19 @@ header button:hover{border-color:var(--gold);color:var(--gold)}
 <div class="modal-overlay" id="addPhotoModal">
   <div class="modal">
     <h3 id="addPhotoTitle">Заменить фото — Слот 1</h3>
-    <img class="img-preview" id="addPhotoPreview">
+    <div class="cropper" id="galCrop" style="aspect-ratio:1"><img id="galCropImg" alt=""></div>
+    <div class="crop-zoom" id="galZoomWrap"><b>−</b><input type="range" id="galZoom" min="1" max="5" step="0.01" value="1"><b>+</b></div>
+    <div class="crop-hint" id="galHint">Перетаскивай фото, ползунком меняй масштаб.<br>Что видно в рамке — то и будет на сайте.</div>
     <div class="upload-zone" id="uploadZone" onclick="document.getElementById('photoFileInput').click()"
          ondragover="event.preventDefault();this.classList.add('drag')"
          ondragleave="this.classList.remove('drag')"
          ondrop="handleDrop(event)">
       <strong>Нажмите или перетащите фото</strong>
-      <p>JPG, PNG — будет автоматически сжат</p>
+      <p>JPG, PNG — размер подгонишь сам</p>
     </div>
     <input type="file" id="photoFileInput" accept="image/*" style="display:none" onchange="handleFileSelect(this)">
     <input type="hidden" id="addPhotoSlot" value="1">
     <div class="size-warning" id="sizeWarn"></div>
-    <div class="upload-progress" id="uploadProgress">
-      <p>Обработка фото...</p>
-      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
-    </div>
     <div class="modal-actions">
       <button class="btn-sm outline" onclick="closeModal('addPhotoModal')">Отмена</button>
       <button class="btn-sm" id="addPhotoBtn" onclick="uploadPhoto()">Сохранить</button>
@@ -204,18 +208,20 @@ header button:hover{border-color:var(--gold);color:var(--gold)}
   <div class="modal">
     <h3>Редактировать услугу</h3>
     <img class="img-preview" id="editSvcPreview">
+    <div class="cropper" id="svcCrop" style="aspect-ratio:4/3"><img id="svcCropImg" alt=""></div>
+    <div class="crop-zoom" id="svcZoomWrap"><b>−</b><input type="range" id="svcZoom" min="1" max="5" step="0.01" value="1"><b>+</b></div>
+    <div class="crop-hint" id="svcHint">Перетаскивай фото, ползунком меняй масштаб.<br>Что видно в рамке — то и будет на сайте.</div>
     <div class="upload-zone" id="svcUploadZone" onclick="document.getElementById('svcFileInput').click()"
          ondragover="event.preventDefault();this.classList.add('drag')"
          ondragleave="this.classList.remove('drag')"
          ondrop="handleSvcDrop(event)">
       <strong>Сменить фото</strong>
-      <p>JPG, PNG — будет автоматически сжат</p>
+      <p>JPG, PNG — размер подгонишь сам</p>
     </div>
     <input type="file" id="svcFileInput" accept="image/*" style="display:none" onchange="handleSvcFileSelect(this)">
     <div class="field"><label>Название</label><input type="text" id="es-title"></div>
     <div class="field"><label>Описание</label><textarea id="es-desc" rows="3"></textarea></div>
     <input type="hidden" id="es-id">
-    <input type="hidden" id="es-imgdata">
     <div class="modal-actions">
       <button class="btn-sm outline" onclick="closeModal('editServiceModal')">Отмена</button>
       <button class="btn-sm" onclick="saveService()">Сохранить</button>
@@ -286,26 +292,115 @@ function toast(msg,type='ok'){
 }
 window.closeModal=id=>document.getElementById(id).classList.remove('open');
 
-// ── IMAGE COMPRESS ───────────────────────────────────────
-function compressImage(file,maxW=900,quality=0.82){
-  return new Promise((resolve,reject)=>{
-    const img=new Image();
-    const url=URL.createObjectURL(file);
-    img.onload=()=>{
-      URL.revokeObjectURL(url);
-      let w=img.width,h=img.height;
-      if(w>maxW){h=Math.round(h*maxW/w);w=maxW;}
-      const canvas=document.createElement('canvas');
-      canvas.width=w;canvas.height=h;
-      canvas.getContext('2d').drawImage(img,0,0,w,h);
-      const data=canvas.toDataURL('image/jpeg',quality);
-      const kb=Math.round((data.length*3/4)/1024);
-      resolve({data,kb});
-    };
-    img.onerror=reject;
-    img.src=url;
+// ── CROPPER (drag to move, slider / wheel / pinch to zoom) ─
+const MAX_ZOOM=5;
+
+function makeCropper(frameId,imgId,zoomId,hintId){
+  const frame=document.getElementById(frameId);
+  const img=document.getElementById(imgId);
+  const zoom=document.getElementById(zoomId);
+  let src=null,IW=0,IH=0,FW=0,FH=0,base=1,z=1,ox=0,oy=0,url='';
+  const pts=new Map();
+  let pinch0=0,zAtPinch=1;
+
+  function apply(){
+    if(!src)return;
+    const s=base*z,dw=IW*s,dh=IH*s;
+    const mx=Math.max(0,(dw-FW)/2),my=Math.max(0,(dh-FH)/2);
+    ox=Math.min(mx,Math.max(-mx,ox));
+    oy=Math.min(my,Math.max(-my,oy));
+    img.style.transform=`translate(${FW/2+ox-dw/2}px,${FH/2+oy-dh/2}px) scale(${s})`;
+  }
+  function measure(){
+    FW=frame.clientWidth;FH=frame.clientHeight;
+    if(src&&FW&&FH){base=Math.max(FW/IW,FH/IH);apply()}
+  }
+  function spread(){
+    const p=[...pts.values()];
+    return Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);
+  }
+  function setZoom(v){
+    z=Math.min(MAX_ZOOM,Math.max(1,v));
+    zoom.value=z;apply();
+  }
+
+  frame.addEventListener('pointerdown',e=>{
+    if(!src)return;
+    frame.setPointerCapture(e.pointerId);
+    pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pts.size===2){pinch0=spread();zAtPinch=z}
+    frame.classList.add('grabbing');
   });
+  frame.addEventListener('pointermove',e=>{
+    if(!pts.has(e.pointerId))return;
+    const prev=pts.get(e.pointerId);
+    pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pts.size===1){ox+=e.clientX-prev.x;oy+=e.clientY-prev.y;apply()}
+    else if(pts.size===2&&pinch0>0){setZoom(zAtPinch*spread()/pinch0)}
+  });
+  const release=e=>{
+    pts.delete(e.pointerId);
+    if(pts.size<2)pinch0=0;
+    if(!pts.size)frame.classList.remove('grabbing');
+  };
+  frame.addEventListener('pointerup',release);
+  frame.addEventListener('pointercancel',release);
+  frame.addEventListener('wheel',e=>{
+    if(!src)return;
+    e.preventDefault();
+    setZoom(z*(e.deltaY<0?1.12:1/1.12));
+  },{passive:false});
+  zoom.addEventListener('input',()=>setZoom(+zoom.value));
+  addEventListener('resize',measure);
+
+  return{
+    get ready(){return !!src},
+    show(){
+      frame.classList.add('show');
+      document.getElementById(zoomId+'Wrap').classList.add('show');
+      document.getElementById(hintId).classList.add('show');
+    },
+    hide(){
+      frame.classList.remove('show');
+      document.getElementById(zoomId+'Wrap').classList.remove('show');
+      document.getElementById(hintId).classList.remove('show');
+    },
+    clear(){
+      if(url)URL.revokeObjectURL(url);
+      url='';src=null;img.removeAttribute('src');
+      z=1;ox=0;oy=0;zoom.value=1;
+    },
+    load(file){
+      return new Promise((res,rej)=>{
+        if(url)URL.revokeObjectURL(url);
+        url=URL.createObjectURL(file);
+        const probe=new Image();
+        probe.onload=()=>{
+          src=probe;IW=probe.naturalWidth;IH=probe.naturalHeight;
+          img.src=url;img.style.width=IW+'px';img.style.height=IH+'px';
+          z=1;ox=0;oy=0;zoom.value=1;
+          requestAnimationFrame(()=>{measure();res()});
+        };
+        probe.onerror=()=>{URL.revokeObjectURL(url);url='';rej(new Error('bad image'))};
+        probe.src=url;
+      });
+    },
+    toDataURL(outW,q){
+      const k=outW/FW;
+      const c=document.createElement('canvas');
+      c.width=outW;c.height=Math.round(FH*k);
+      const ctx=c.getContext('2d');
+      ctx.fillStyle='#000';ctx.fillRect(0,0,c.width,c.height);
+      const s=base*z,dw=IW*s,dh=IH*s;
+      ctx.drawImage(src,(FW/2+ox-dw/2)*k,(FH/2+oy-dh/2)*k,dw*k,dh*k);
+      const data=c.toDataURL('image/jpeg',q);
+      return{data,kb:Math.round(data.length*3/4/1024)};
+    }
+  };
 }
+
+const galCropper=makeCropper('galCrop','galCropImg','galZoom','galHint');
+const svcCropper=makeCropper('svcCrop','svcCropImg','svcZoom','svcHint');
 
 // ── GALLERY (6 fixed slots) ──────────────────────────────
 const SLOT_NAMES=['Слот 1','Слот 2','Слот 3','Слот 4','Слот 5','Слот 6'];
@@ -338,16 +433,12 @@ function renderGallery(slots){
   `).join('');
 }
 
-let pendingPhotoData='';
-
 window.openReplacePhoto=slot=>{
-  pendingPhotoData='';
   document.getElementById('addPhotoSlot').value=slot;
   document.getElementById('addPhotoTitle').textContent=`Заменить фото — ${SLOT_NAMES[slot-1]}`;
-  document.getElementById('addPhotoPreview').style.display='none';
   document.getElementById('photoFileInput').value='';
   document.getElementById('sizeWarn').textContent='';
-  document.getElementById('uploadProgress').style.display='none';
+  galCropper.clear();galCropper.hide();
   document.getElementById('addPhotoModal').classList.add('open');
 };
 
@@ -360,36 +451,28 @@ window.handleDrop=e=>{
 window.handleFileSelect=input=>{if(input.files[0])processPhotoFile(input.files[0]);};
 
 async function processPhotoFile(file){
-  const prog=document.getElementById('uploadProgress');
-  const fill=document.getElementById('progressFill');
   const warn=document.getElementById('sizeWarn');
-  prog.style.display='block';fill.style.width='30%';
   warn.textContent='';warn.className='size-warning';
+  galCropper.show();
   try{
-    const {data,kb}=await compressImage(file);
-    fill.style.width='100%';
-    pendingPhotoData=data;
-    const prev=document.getElementById('addPhotoPreview');
-    prev.src=data;prev.style.display='block';
-    warn.textContent=`Фото: ${kb} КБ`;
-    warn.className=kb>700?'size-warning warn':'size-warning';
-    setTimeout(()=>{prog.style.display='none';},400);
+    await galCropper.load(file);
   }catch(e){
-    warn.textContent='Ошибка обработки файла';
+    galCropper.hide();
+    warn.textContent='Не удалось открыть этот файл';
     warn.className='size-warning err';
-    prog.style.display='none';
   }
 }
 
 window.uploadPhoto=async()=>{
-  if(!pendingPhotoData){toast('Выберите фото','fail');return;}
+  if(!galCropper.ready){toast('Выберите фото','fail');return;}
   const slot=document.getElementById('addPhotoSlot').value;
   const btn=document.getElementById('addPhotoBtn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Сохранение...';
   try{
-    await setDoc(doc(db,'gallery','slot'+slot),{url:pendingPhotoData,order:+slot});
+    const {data,kb}=galCropper.toDataURL(900,0.82);
+    await setDoc(doc(db,'gallery','slot'+slot),{url:data,order:+slot});
     closeModal('addPhotoModal');
-    toast(`${SLOT_NAMES[slot-1]} обновлён!`);
+    toast(`${SLOT_NAMES[slot-1]} обновлён (${kb} КБ)`);
     loadGallery();
   }catch(e){
     toast('Ошибка: '+e.message,'fail');
@@ -473,10 +556,10 @@ window.openEditService=async id=>{
     document.getElementById('es-id').value=id;
     document.getElementById('es-title').value=svcData.title||'';
     document.getElementById('es-desc').value=svcData.desc||'';
-    document.getElementById('es-imgdata').value='';
     const prev=document.getElementById('editSvcPreview');
     if(svcData.img){prev.src=svcData.img;prev.style.display='block';}
     else{prev.style.display='none';}
+    svcCropper.clear();svcCropper.hide();
     document.getElementById('svcFileInput').value='';
     document.getElementById('editServiceModal').classList.add('open');
   }catch(e){toast('Ошибка','fail');}
@@ -491,12 +574,14 @@ window.handleSvcDrop=e=>{
 window.handleSvcFileSelect=input=>{if(input.files[0])processSvcFile(input.files[0]);};
 
 async function processSvcFile(file){
+  document.getElementById('editSvcPreview').style.display='none';
+  svcCropper.show();
   try{
-    const {data}=await compressImage(file,600,0.8);
-    document.getElementById('es-imgdata').value=data;
-    const prev=document.getElementById('editSvcPreview');
-    prev.src=data;prev.style.display='block';
-  }catch(e){toast('Ошибка файла','fail');}
+    await svcCropper.load(file);
+  }catch(e){
+    svcCropper.hide();
+    toast('Не удалось открыть этот файл','fail');
+  }
 }
 
 window.saveService=async()=>{
@@ -505,8 +590,7 @@ window.saveService=async()=>{
     title:document.getElementById('es-title').value.trim(),
     desc:document.getElementById('es-desc').value.trim(),
   };
-  const newImg=document.getElementById('es-imgdata').value;
-  if(newImg)update.img=newImg;
+  if(svcCropper.ready)update.img=svcCropper.toDataURL(800,0.82).data;
   try{
     await updateDoc(doc(db,'services',id),update);
     closeModal('editServiceModal');
