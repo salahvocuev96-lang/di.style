@@ -142,6 +142,7 @@ header button:hover{border-color:var(--gold);color:var(--gold)}
     <div class="section-head">
       <h2>УСЛУГИ</h2>
     </div>
+    <p style="font-size:.8rem;color:#777;margin-bottom:16px">«Фото с сайта» — значит фото ещё не меняли, на сайте стоит оригинальное. Блоки идут в том же порядке, что на сайте.</p>
     <div class="service-list" id="serviceList">
       <div class="loading-state"><span class="spinner"></span>Загрузка...</div>
     </div>
@@ -408,33 +409,44 @@ window.deletePhoto=slot=>{
 };
 
 // ── SERVICES ────────────────────────────────────────────
+// ids and order match the blocks on the site
+const SVC_DEFAULTS=[
+  {id:'svc1',title:'Вышивка логотипов',desc:'Перенос вашего знака на ткань с чёткими контурами и объёмом нити.',order:1},
+  {id:'svc9',title:'Брендирование одежды',desc:'Единый вид для команды: футболки, худи, толстовки, кепки, рабочая одежда.',order:2},
+  {id:'svc2',title:'Индивидуальная вышивка',desc:'Личные заказы: знак, надпись или идея, которой нет в каталоге.',order:3},
+  {id:'svc3',title:'Вышивка на аксессуарах',desc:'Сумки и другие текстильные изделия.',order:4},
+  {id:'svc4',title:'Лента на букет',desc:'Ленты для оформления букетов.',order:5},
+  {id:'svc5',title:'Фатин на букет',desc:'Фатин для оформления букетов.',order:6},
+  {id:'svc6',title:'Нашивки на форму',desc:'Нашивки для формы и рабочей одежды.',order:7},
+  {id:'svc7',title:'Вышитое письмо',desc:'Вышитое письмо или надпись на ткани.',order:8},
+  {id:'svc8',title:'Именные пижамки',desc:'Пижамки с именем.',order:9},
+];
+
 async function loadServices(){
   const list=document.getElementById('serviceList');
   try{
     const snap=await getDocs(collection(db,'services'));
-    let services=[];
-    snap.forEach(d=>services.push({id:d.id,...d.data()}));
-    const NEW_DEFAULTS=[
-      {id:'svc1',title:'Вышивка логотипов',desc:'',img:'',order:1},
-      {id:'svc2',title:'Индивидуальная вышивка',desc:'',img:'',order:2},
-      {id:'svc3',title:'Вышивка на аксессуарах',desc:'',img:'',order:3},
-      {id:'svc4',title:'Лента на букет',desc:'',img:'',order:4},
-      {id:'svc5',title:'Фатин на букет',desc:'',img:'',order:5},
-      {id:'svc6',title:'Нашивки на форму',desc:'',img:'',order:6},
-      {id:'svc7',title:'Вышитое письмо',desc:'',img:'',order:7},
-      {id:'svc8',title:'Именные пижамки',desc:'',img:'',order:8},
-    ];
-    // Check if services are old defaults or empty — replace with new
-    const isOld=!services.length||services.some(s=>['Вышивка на заказ','Нашивки и патчи','Корпоративная символика','Персонализация'].includes(s.title));
-    if(isOld){
-      // Delete old docs
-      for(const s of services)await deleteDoc(doc(db,'services',s.id));
-      // Create new
-      for(const s of NEW_DEFAULTS)await setDoc(doc(db,'services',s.id),{title:s.title,desc:s.desc,img:s.img,order:s.order});
-      services=NEW_DEFAULTS;
+    const byId={};
+    snap.forEach(d=>{byId[d.id]=d.data()});
+    // fill only what is missing — never delete, never touch an uploaded photo
+    for(const d of SVC_DEFAULTS){
+      const cur=byId[d.id];
+      if(!cur){
+        const fresh={title:d.title,desc:d.desc,img:'',order:d.order};
+        await setDoc(doc(db,'services',d.id),fresh);
+        byId[d.id]=fresh;
+      }else{
+        const patch={};
+        if(!cur.title)patch.title=d.title;
+        if(!cur.desc)patch.desc=d.desc;
+        if(cur.order!==d.order)patch.order=d.order;
+        if(Object.keys(patch).length){
+          await updateDoc(doc(db,'services',d.id),patch);
+          Object.assign(cur,patch);
+        }
+      }
     }
-    services.sort((a,b)=>(a.order||0)-(b.order||0));
-    renderServices(services);
+    renderServices(SVC_DEFAULTS.map(d=>({id:d.id,...byId[d.id]})));
   }catch(e){
     list.innerHTML=`<div class="loading-state" style="color:var(--red)">Ошибка: ${e.message}</div>`;
   }
@@ -443,7 +455,7 @@ async function loadServices(){
 function renderServices(services){
   document.getElementById('serviceList').innerHTML=services.map(s=>`
     <div class="service-card">
-      ${s.img?`<img class="service-thumb" src="${s.img}" alt="">`:'<div class="service-no-img">Нет фото</div>'}
+      ${s.img?`<img class="service-thumb" src="${s.img}" alt="">`:'<div class="service-no-img">Фото<br>с сайта</div>'}
       <div class="service-info"><h3>${s.title||''}</h3><p>${s.desc||''}</p></div>
       <div class="service-actions">
         <button class="btn-sm outline" onclick="openEditService('${s.id}')">Изменить</button>
