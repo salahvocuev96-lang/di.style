@@ -27,18 +27,9 @@ function Drawer({ onClose, onOpenProduct, onShop }: { onClose: () => void; onOpe
 
   const message = buildOrderMessage(lines, subtotal, contact)
 
-  const order = () => {
-    const url = buildTelegramUrl(message)
-    if (!url) {
-      setStatus('not-configured')
-      return
-    }
-    const win = window.open(url, '_blank')
-    // Если браузер заблокировал новое окно — открываем в текущей вкладке
-    if (win) win.opener = null
-    else window.location.href = url
-    setStatus('opened')
-  }
+  const telegramUrl = buildTelegramUrl(message)
+  const orderClass =
+    'group mt-4 flex h-14 w-full items-center justify-center gap-3 bg-accent text-[13px] font-bold tracking-[0.14em] text-ink uppercase transition-colors hover:bg-accent-hover active:scale-[0.99]'
 
   const copy = async () => {
     try {
@@ -164,13 +155,18 @@ function Drawer({ onClose, onOpenProduct, onShop }: { onClose: () => void; onOpe
                 )}
               </AnimatePresence>
 
-              <button
-                onClick={order}
-                className="group mt-4 flex h-14 w-full items-center justify-center gap-3 bg-accent text-[13px] font-bold tracking-[0.14em] text-ink uppercase transition-colors hover:bg-accent-hover active:scale-[0.99]"
-              >
-                <Send size={17} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                Order via Telegram
-              </button>
+              {/* Обычная ссылка, а не window.open: её не блокируют браузеры и встроенные окна */}
+              {telegramUrl ? (
+                <a href={telegramUrl} target="_blank" rel="noopener noreferrer" onClick={() => setStatus('opened')} className={orderClass}>
+                  <Send size={17} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                  Order via Telegram
+                </a>
+              ) : (
+                <button onClick={() => setStatus('not-configured')} className={orderClass}>
+                  <Send size={17} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                  Order via Telegram
+                </button>
+              )}
               <div className="mt-2 flex items-center justify-between">
                 <button onClick={copy} className="inline-flex h-10 items-center gap-2 text-[12px] text-mute transition-colors hover:text-ink">
                   <Copy size={14} /> Copy order text

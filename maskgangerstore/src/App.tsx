@@ -37,15 +37,23 @@ export default function App() {
     setSearchOpen(false)
     closeCart()
     const url = `${window.location.pathname}?product=${encodeURIComponent(id)}`
-    if (productFromUrl()) window.history.replaceState({ product: id }, '', url)
-    else window.history.pushState({ product: id }, '', url)
+    try {
+      if (productFromUrl()) window.history.replaceState({ product: id }, '', url)
+      else window.history.pushState({ product: id }, '', url)
+    } catch {
+      /* в некоторых встроенных окнах адрес менять нельзя — просто открываем товар */
+    }
     setProductId(id)
   }, [closeCart])
 
   const closeProduct = useCallback(() => {
-    if (window.history.state?.product) window.history.back()
+    if (window.history.state?.product && productFromUrl()) window.history.back()
     else {
-      window.history.replaceState(null, '', window.location.pathname)
+      try {
+        window.history.replaceState(null, '', window.location.pathname)
+      } catch {
+        /* см. openProduct */
+      }
       setProductId(null)
     }
   }, [])
