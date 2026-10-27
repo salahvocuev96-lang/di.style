@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { useEffect, useRef, useState } from 'react'
+import { AnimatePresence, motion, useAnimationControls } from 'framer-motion'
 import { Menu, Search, ShoppingBag, X, ArrowUpRight } from 'lucide-react'
 import { Logo } from './Logo'
 import { useCart } from '../context/CartContext'
@@ -9,9 +9,9 @@ import { telegramProfileUrl } from '../config/store'
 import { lockScroll } from '../lib/useModal'
 
 const NAV = [
-  { id: 'shop', label: 'Shop' },
-  { id: 'new', label: 'New Arrivals' },
-  { id: 'about', label: 'About' },
+  { id: 'shop', label: 'Каталог' },
+  { id: 'new', label: 'Новинки' },
+  { id: 'about', label: 'О магазине' },
 ]
 const SECTION_IDS = NAV.map((n) => n.id)
 
@@ -20,6 +20,16 @@ export function Header({ onSearch }: { onSearch: () => void }) {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const active = useActiveSection(SECTION_IDS)
+  const bag = useAnimationControls()
+  const prevCount = useRef(count)
+
+  // Иконка корзины «подпрыгивает», когда товаров становится больше
+  useEffect(() => {
+    if (count > prevCount.current) {
+      bag.start({ rotate: [0, -14, 10, -6, 0], scale: [1, 1.25, 1], transition: { duration: 0.6 } })
+    }
+    prevCount.current = count
+  }, [count, bag])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24)
@@ -41,7 +51,6 @@ export function Header({ onSearch }: { onSearch: () => void }) {
 
   const go = (id: string) => {
     setMenuOpen(false)
-    // ждём закрытия меню, чтобы прокрутка не блокировалась
     requestAnimationFrame(() => scrollToId(id))
   }
 
@@ -49,12 +58,15 @@ export function Header({ onSearch }: { onSearch: () => void }) {
 
   return (
     <>
-      <header
-        className={`fixed inset-x-0 top-0 z-50 transition-[background-color,border-color,backdrop-filter] duration-500 ${
-          scrolled || menuOpen ? 'border-b border-line bg-bg/85 backdrop-blur-md' : 'border-b border-transparent bg-transparent'
+      <motion.header
+        initial={{ y: -80 }}
+        animate={{ y: 0 }}
+        transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+        className={`fixed inset-x-0 top-0 z-50 transition-[background-color,box-shadow] duration-500 ${
+          scrolled || menuOpen ? 'bg-paper/90 shadow-[0_1px_0_var(--color-line)] backdrop-blur-md' : 'bg-transparent'
         }`}
       >
-        <div className="mx-auto flex h-16 max-w-[1600px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-10">
+        <div className="mx-auto flex h-16 max-w-[1600px] items-center justify-between gap-4 px-4 sm:h-[72px] sm:px-6 lg:px-10">
           <a
             href="#top"
             onClick={(e) => {
@@ -62,36 +74,41 @@ export function Header({ onSearch }: { onSearch: () => void }) {
               setMenuOpen(false)
               window.scrollTo({ top: 0, behavior: 'smooth' })
             }}
-            aria-label="MASKGANGERSTORE — back to top"
+            aria-label="MASKGANGERSTORE — на главную"
             className="shrink-0"
           >
             <Logo />
           </a>
 
-          <nav aria-label="Main" className="hidden md:block">
-            <ul className="flex items-center gap-9">
-              {NAV.map((n) => (
-                <li key={n.id}>
-                  <a
-                    href={`#${n.id}`}
-                    onClick={(e) => {
-                      e.preventDefault()
-                      go(n.id)
-                    }}
-                    aria-current={active === n.id ? 'true' : undefined}
-                    className={`group relative py-2 text-[12px] font-semibold tracking-[0.16em] uppercase transition-colors ${
-                      active === n.id ? 'text-ink' : 'text-ink/60 hover:text-ink'
-                    }`}
-                  >
-                    {n.label}
-                    <span
-                      className={`absolute -bottom-0.5 left-0 h-px bg-accent transition-all duration-300 ease-out-expo ${
-                        active === n.id ? 'w-full' : 'w-0 group-hover:w-full'
+          <nav aria-label="Основное меню" className="hidden md:block">
+            <ul className="flex items-center gap-2 bg-white/70 p-1 backdrop-blur">
+              {NAV.map((n) => {
+                const on = active === n.id
+                return (
+                  <li key={n.id} className="relative">
+                    {on && <motion.span layoutId="nav-pill" className="absolute inset-0 bg-ink" transition={{ type: 'spring', stiffness: 400, damping: 34 }} />}
+                    <a
+                      href={`#${n.id}`}
+                      onClick={(e) => {
+                        e.preventDefault()
+                        go(n.id)
+                      }}
+                      aria-current={on ? 'true' : undefined}
+                      className={`group relative flex h-10 items-center overflow-hidden px-4 text-[13px] font-bold tracking-[0.06em] uppercase transition-colors ${
+                        on ? 'text-white' : 'text-ink hover:text-accent'
                       }`}
-                    />
-                  </a>
-                </li>
-              ))}
+                    >
+                      {/* текст «прокручивается» при наведении */}
+                      <span className="relative block overflow-hidden">
+                        <span className="block transition-transform duration-300 ease-out-expo group-hover:-translate-y-full">{n.label}</span>
+                        <span aria-hidden className="absolute inset-0 block translate-y-full transition-transform duration-300 ease-out-expo group-hover:translate-y-0">
+                          {n.label}
+                        </span>
+                      </span>
+                    </a>
+                  </li>
+                )
+              })}
             </ul>
           </nav>
 
@@ -101,29 +118,31 @@ export function Header({ onSearch }: { onSearch: () => void }) {
                 setMenuOpen(false)
                 onSearch()
               }}
-              aria-label="Search products"
-              className="grid size-11 place-items-center text-ink/80 transition-colors hover:text-ink"
+              aria-label="Поиск товаров"
+              className="grid size-11 place-items-center transition-colors hover:text-accent"
             >
-              <Search size={19} strokeWidth={1.75} />
+              <Search size={21} strokeWidth={2} />
             </button>
             <button
               onClick={() => {
                 setMenuOpen(false)
                 openCart()
               }}
-              aria-label={`Open cart, ${count} ${count === 1 ? 'item' : 'items'}`}
-              className="relative grid size-11 place-items-center text-ink/80 transition-colors hover:text-ink"
+              aria-label={`Открыть корзину, товаров: ${count}`}
+              className="relative grid size-11 place-items-center bg-ink text-white transition-colors hover:bg-accent"
             >
-              <ShoppingBag size={19} strokeWidth={1.75} />
+              <motion.span animate={bag} className="grid place-items-center">
+                <ShoppingBag size={20} strokeWidth={2} />
+              </motion.span>
               <AnimatePresence>
                 {count > 0 && (
                   <motion.span
                     key={count}
-                    initial={{ scale: 0.4, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0.4, opacity: 0 }}
-                    transition={{ type: 'spring', stiffness: 600, damping: 20 }}
-                    className="absolute top-1.5 right-0.5 grid h-[18px] min-w-[18px] place-items-center bg-accent px-1 font-mono text-[10px] leading-none font-medium text-ink"
+                    initial={{ scale: 0, y: 6 }}
+                    animate={{ scale: 1, y: 0 }}
+                    exit={{ scale: 0 }}
+                    transition={{ type: 'spring', stiffness: 600, damping: 18 }}
+                    className="absolute -top-2 -right-2 grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1 font-mono text-[11px] leading-none font-bold text-white ring-2 ring-paper"
                   >
                     {count}
                   </motion.span>
@@ -132,35 +151,36 @@ export function Header({ onSearch }: { onSearch: () => void }) {
             </button>
             <button
               onClick={() => setMenuOpen((v) => !v)}
-              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+              aria-label={menuOpen ? 'Закрыть меню' : 'Открыть меню'}
               aria-expanded={menuOpen}
               aria-controls="mobile-menu"
-              className="grid size-11 place-items-center md:hidden"
+              className="ml-1 grid size-11 place-items-center md:hidden"
             >
-              {menuOpen ? <X size={22} strokeWidth={1.75} /> : <Menu size={22} strokeWidth={1.75} />}
+              {menuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
         </div>
-      </header>
+      </motion.header>
 
       <AnimatePresence>
         {menuOpen && (
           <motion.div
             id="mobile-menu"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: { duration: 0.2 } }}
-            className="fixed inset-0 z-40 flex flex-col bg-bg px-4 pt-24 pb-8 md:hidden"
+            initial={{ clipPath: 'inset(0 0 100% 0)' }}
+            animate={{ clipPath: 'inset(0 0 0% 0)' }}
+            exit={{ clipPath: 'inset(0 0 100% 0)', transition: { duration: 0.35, ease: [0.7, 0, 0.84, 0] } }}
+            transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed inset-0 z-40 flex flex-col bg-ink px-4 pt-24 pb-8 text-white md:hidden"
           >
-            <nav aria-label="Mobile" className="flex-1">
-              <ul className="border-t border-line">
+            <nav aria-label="Мобильное меню" className="flex-1">
+              <ul>
                 {NAV.map((n, i) => (
                   <motion.li
                     key={n.id}
-                    initial={{ opacity: 0, y: 18 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.06 + i * 0.06, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                    className="border-b border-line"
+                    initial={{ opacity: 0, x: -30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.15 + i * 0.07, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                    className="border-b border-line-light"
                   >
                     <a
                       href={`#${n.id}`}
@@ -168,28 +188,28 @@ export function Header({ onSearch }: { onSearch: () => void }) {
                         e.preventDefault()
                         go(n.id)
                       }}
-                      className="flex items-center justify-between py-5 font-wide text-[1.75rem] leading-none font-black uppercase"
+                      className="flex items-center justify-between py-6 font-display text-[1.9rem] leading-none font-extrabold uppercase"
                     >
-                      <span>
-                        <span className="label mr-3 align-middle text-mute">0{i + 1}</span>
+                      <span className="flex items-baseline gap-3">
+                        <span className="font-mono text-sm text-accent">0{i + 1}</span>
                         {n.label}
                       </span>
-                      <ArrowUpRight size={22} className={active === n.id ? 'text-accent' : 'text-mute'} />
+                      <ArrowUpRight size={26} className={active === n.id ? 'text-accent' : 'text-white/50'} />
                     </a>
                   </motion.li>
                 ))}
               </ul>
             </nav>
-            <div className="flex items-center justify-between label text-mute">
-              <span>Urban uniform</span>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { delay: 0.4 } }} className="flex items-center justify-between text-sm text-white/70">
+              <span className="tag">Drop 001</span>
               {tg ? (
-                <a href={tg} target="_blank" rel="noopener noreferrer" className="text-ink">
+                <a href={tg} target="_blank" rel="noopener noreferrer" className="font-bold text-white">
                   Telegram ↗
                 </a>
               ) : (
-                <span>Telegram — soon</span>
+                <span>Telegram — скоро</span>
               )}
-            </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

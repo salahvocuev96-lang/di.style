@@ -6,6 +6,8 @@ import { CategoryGrid } from './components/CategoryGrid'
 import { NewArrivals } from './components/NewArrivals'
 import { Catalog, type CatalogFilters } from './components/Catalog'
 import { About } from './components/About'
+import { Lookbook } from './components/Lookbook'
+import { OrderSteps } from './components/OrderSteps'
 import { Footer } from './components/Footer'
 import { ProductDetails } from './components/ProductDetails'
 import { CartDrawer } from './components/CartDrawer'
@@ -67,16 +69,18 @@ export default function App() {
 
   return (
     <>
-      <a href="#shop" className="sr-only z-[100] bg-ink px-4 py-2 text-bg focus:not-sr-only focus:fixed focus:top-2 focus:left-2">
-        Skip to shop
+      <a href="#shop" className="sr-only z-[100] bg-ink px-4 py-2 text-white focus:not-sr-only focus:fixed focus:top-2 focus:left-2">
+        Перейти к каталогу
       </a>
       <Header onSearch={() => setSearchOpen(true)} />
       <main>
-        <Hero />
+        <Hero onOpen={openProduct} />
         <Marquee />
         <CategoryGrid onSelect={(c: Category) => goToShop({ category: c, query: '' })} />
         <NewArrivals onOpen={openProduct} onViewAll={() => goToShop({ category: 'all', query: '' })} />
+        <Lookbook onOpen={openProduct} />
         <Catalog filters={filters} onChange={setFilters} onOpen={openProduct} />
+        <OrderSteps />
         <About />
       </main>
       <Footer />

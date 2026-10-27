@@ -1,6 +1,6 @@
 # MASKGANGERSTORE — демо интернет-магазина
 
-React + TypeScript + Vite + Tailwind CSS + Framer Motion. Сервера и базы данных нет: корзина хранится в браузере (localStorage), заказ оформляется через Telegram.
+React + TypeScript + Vite + Tailwind CSS + Framer Motion. Интерфейс на русском, шрифты Unbounded и Manrope (с кириллицей). Сервера и базы данных нет: корзина хранится в браузере (localStorage), заказ оформляется через Telegram.
 
 ## Запуск
 

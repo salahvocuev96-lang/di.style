@@ -5,26 +5,19 @@ import { formatPrice } from './format'
 /** Текст заказа, который покупатель отправит продавцу в Telegram */
 export function buildOrderMessage(lines: CartLine[], subtotal: number, contact: string): string {
   const rows = lines.map((l, i) => {
-    const size = l.size ? `Size: ${l.size}` : 'One size'
-    return `${i + 1}. ${l.product.name}\n   ${size} · Qty: ${l.quantity} · ${formatPrice(l.product.price)} each\n   = ${formatPrice(l.lineTotal)}`
+    const size = l.size ? `Размер: ${l.size}` : 'Один размер'
+    return `${i + 1}. ${l.product.name}\n   ${size} · Кол-во: ${l.quantity} · ${formatPrice(l.product.price)} за шт.\n   = ${formatPrice(l.lineTotal)}`
   })
-  const parts = [
-    `New order request — ${storeConfig.storeName}`,
-    '',
-    ...rows,
-    '',
-    `Total: ${formatPrice(subtotal)}`,
-  ]
+  const parts = [`Здравствуйте! Хочу оформить заказ в ${storeConfig.storeName}:`, '', ...rows, '', `Итого: ${formatPrice(subtotal)}`]
   const c = contact.trim()
-  if (c) parts.push('', `Contact: ${c}`)
-  parts.push('', 'Please confirm availability and delivery details.')
+  if (c) parts.push('', `Контакт: ${c}`)
+  parts.push('', 'Подскажите, пожалуйста, наличие и условия доставки.')
   return parts.join('\n')
 }
 
 /**
- * Ссылка на чат с продавцом с заранее вставленным текстом.
- * Формат t.me/<username>?text=... поддерживается Telegram для личных чатов.
- * Сообщение НЕ отправляется автоматически — пользователь сам нажимает «Отправить».
+ * Ссылка на чат с продавцом с заранее вставленным текстом (формат t.me/<username>?text=...).
+ * Сообщение НЕ отправляется автоматически — покупатель сам нажимает «Отправить» в Telegram.
  */
 export function buildTelegramUrl(message: string): string | null {
   const username = getTelegramUsername()

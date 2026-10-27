@@ -10,7 +10,7 @@ export const storeConfig = {
    */
   telegramUsername: 'YOUR_TELEGRAM_USERNAME',
   currency: 'EUR',
-  locale: 'en-IE',
+  locale: 'ru-RU',
   /** Демо-режим: показывает пометку о тестовых товарах и ценах */
   demoMode: true,
 }

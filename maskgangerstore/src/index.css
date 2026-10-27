@@ -1,37 +1,47 @@
 @import 'tailwindcss';
 
+/* Светлая база + графитовые блоки + выразительный красный */
 @theme {
-  --color-bg: #0b0b0c;
-  --color-bg2: #111113;
-  --color-card: #171719;
-  --color-ink: #f2f0ed;
-  --color-mute: #929292;
-  --color-accent: #d71920;
-  --color-accent-hover: #ef2a31;
-  --color-line: rgba(255, 255, 255, 0.1);
-  --font-display: 'Archivo', system-ui, sans-serif;
-  --font-sans: 'Archivo', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --color-paper: #f1f0ed;
+  --color-paper-2: #e6e4df;
+  --color-white: #ffffff;
+  --color-ink: #171717;
+  --color-graphite: #252525;
+  --color-coal: #1c1c1c;
+  --color-mute: #626262;
+  --color-accent: #e31b23;
+  --color-accent-dark: #b9121a;
+  --color-line: rgba(23, 23, 23, 0.12);
+  --color-line-light: rgba(255, 255, 255, 0.16);
+  --font-display: 'Unbounded', 'Manrope', system-ui, sans-serif;
+  --font-sans: 'Manrope', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @layer base {
   html {
-    background: var(--color-bg);
-    color-scheme: dark;
-    scroll-behavior: smooth;
+    background: var(--color-paper);
+    color-scheme: light;
     -webkit-text-size-adjust: 100%;
   }
   body {
-    background: var(--color-bg);
+    background: var(--color-paper);
     color: var(--color-ink);
     font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.55;
     -webkit-font-smoothing: antialiased;
     overflow-x: clip;
   }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
   ::selection {
     background: var(--color-accent);
-    color: var(--color-ink);
+    color: #fff;
   }
   :focus-visible {
     outline: 2px solid var(--color-accent);
@@ -45,47 +55,90 @@
   }
 }
 
-@utility font-wide {
-  font-family: var(--font-display);
-  font-stretch: 125%;
-  font-variation-settings: 'wdth' 125;
-}
-@utility font-condensed {
-  font-family: var(--font-display);
-  font-stretch: 75%;
-  font-variation-settings: 'wdth' 75;
-}
-@utility label {
+/* Моноширинная подпись: читаемый размер, не меньше 12px */
+@utility tag {
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  letter-spacing: 0.14em;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-/* Бегущая строка */
+/* Кнопка с заливкой цветом при наведении */
+@utility btn-fill {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--fill, var(--color-ink));
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 0.5s var(--ease-out-expo);
+  }
+  &:focus-visible::before {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+  @media (hover: hover) {
+    &:hover::before {
+      transform: scaleX(1);
+      transform-origin: left;
+    }
+  }
+}
+
 @keyframes marquee {
   to {
     transform: translate3d(-50%, 0, 0);
   }
 }
 .marquee-track {
-  animation: marquee 38s linear infinite;
+  animation: marquee var(--speed, 30s) linear infinite;
+}
+.marquee-reverse {
+  animation-direction: reverse;
 }
 
-/* Лёгкое зерно поверх фото — editorial-ощущение без тяжёлых эффектов */
-.grain::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.07;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+@keyframes img-in {
+  from {
+    opacity: 0;
+  }
+}
+.img-in {
+  animation: img-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-6px);
+  }
+  75% {
+    transform: translateX(6px);
+  }
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Полутоновая сетка для графических деталей */
+.dots {
+  background-image: radial-gradient(currentColor 1.2px, transparent 1.2px);
+  background-size: 12px 12px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
   .marquee-track {
     animation: none;
   }
@@ -97,23 +150,31 @@
   }
 }
 
-.no-scrollbar {
-  scrollbar-width: none;
+/* Силуэты-заглушки */
+.garment-art {
+  fill: var(--art-fill, var(--color-graphite));
 }
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
+.garment-art .art-hole {
+  fill: var(--art-hole, #3a3a3a);
 }
-
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-6px); }
-  75% { transform: translateX(6px); }
+.garment-art .art-line,
+.garment-art .art-cord {
+  fill: none;
+  stroke: var(--art-hole, #3a3a3a);
+  stroke-width: 3;
+  stroke-linecap: round;
 }
-
-/* Плавное появление фото после загрузки (animation, чтобы не конфликтовать с transition зума) */
-@keyframes img-in {
-  from { opacity: 0; }
+.garment-art .art-strap {
+  fill: none;
+  stroke: var(--art-fill, var(--color-graphite));
+  stroke-width: 9;
 }
-.img-in {
-  animation: img-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+.garment-art .art-accent {
+  fill: var(--color-accent);
+}
+.garment-art .art-accent-stroke {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 6;
+  stroke-linecap: round;
 }
