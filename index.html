@@ -453,6 +453,21 @@ Promise.all([1,2,3,4,5,6].map(n=>getDoc(doc(_db,'gallery','slot'+n)))).then(snap
     else{el.insertAdjacentHTML('beforeend',`<img src="${url}" loading="lazy" style="width:100%;height:100%;object-fit:cover">`);}
   });
 }).catch(()=>{});
+// Load services from Firebase
+getDocs(collection(_db,'services')).then(snap=>{
+  if(snap.empty)return;
+  const items=[];
+  snap.forEach(d=>items.push({id:d.id,...d.data()}));
+  items.sort((a,b)=>(a.order||0)-(b.order||0));
+  const cards=Array.from(document.querySelectorAll('#svc article'));
+  items.forEach((svc,i)=>{
+    const card=cards[i];
+    if(!card)return;
+    if(svc.title){const h=card.querySelector('h3');if(h)h.textContent=svc.title;}
+    if(svc.desc){const p=card.querySelector('p');if(p)p.textContent=svc.desc;}
+    if(svc.img){const th=card.querySelector('.thumb');if(th){th.style.background=`url(${svc.img}) center/cover`;th.style.backgroundSize='cover';}}
+  });
+}).catch(()=>{});
 // Load contacts from Firebase
 getDoc(doc(_db,'config','contacts')).then(snap=>{
   if(!snap.exists())return;
