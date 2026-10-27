@@ -278,7 +278,7 @@ gl.innerHTML=GALLERY.map((g,i)=>g.img
 const lb=$("#lb"),lbImg=$("#lb-img");
 const openLb=src=>{lbImg.src=src;lb.classList.add("open")};
 const closeLb=()=>{lb.classList.remove("open");lbImg.src=""};
-gl.addEventListener("click",e=>{const el=e.target.closest(".gitem");if(!el)return;const g=GALLERY[+el.dataset.i];if(g.img)openLb(g.img)});
+gl.addEventListener("click",e=>{const el=e.target.closest(".gitem");if(!el)return;const fbImg=el.dataset.fbImg;const g=GALLERY[+el.dataset.i];const src=fbImg||(g&&g.img)||'';if(src)openLb(src)});
 $("#lb-close").onclick=closeLb;lb.addEventListener("click",e=>{if(e.target===lb)closeLb()});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeLb()});
 $("#yr").textContent=new Date().getFullYear();
@@ -436,23 +436,21 @@ const _fc={apiKey:"AIzaSyCqpgFBXGKghBue7Dq1whc-ZXBaiV2z3Sk",authDomain:"di-style
 try{
 const _app=initializeApp(_fc);
 const _db=getFirestore(_app);
-// Load gallery from Firebase
-getDocs(collection(_db,'gallery')).then(snap=>{
-  if(snap.empty)return;
-  const items=[];
-  snap.forEach(d=>items.push({id:d.id,...d.data()}));
-  items.sort((a,b)=>(a.order||0)-(b.order||0));
+// Load gallery slots from Firebase (slot1-slot6)
+Promise.all([1,2,3,4,5,6].map(n=>getDoc(doc(_db,'gallery','slot'+n)))).then(snaps=>{
   const gl=document.getElementById("gallery");
   if(!gl)return;
-  const lbImg=document.getElementById("lbImg");
-  const lb=document.getElementById("lb");
-  const imgs=items.map(g=>g.url||'');
-  gl.innerHTML=items.map((g,i)=>g.url?`<div class="gitem" data-i="${i}" style="cursor:pointer"><img src="${g.url}" alt="${g.desc||''}" loading="lazy" style="width:100%;height:100%;object-fit:cover"></div>`:`<div class="gitem" data-i="${i}"></div>`).join('');
-  gl.addEventListener("click",e=>{
-    const el=e.target.closest(".gitem");
+  const gItems=Array.from(gl.querySelectorAll('.gitem'));
+  snaps.forEach((snap,i)=>{
+    if(!snap.exists())return;
+    const url=snap.data().url;
+    if(!url)return;
+    const el=gItems[i];
     if(!el)return;
-    const src=imgs[+el.dataset.i];
-    if(src&&lbImg&&lb){lbImg.src=src;lb.classList.add("open");}
+    el.dataset.fbImg=url;
+    const img=el.querySelector('img');
+    if(img){img.src=url;}
+    else{el.insertAdjacentHTML('beforeend',`<img src="${url}" loading="lazy" style="width:100%;height:100%;object-fit:cover">`);}
   });
 }).catch(()=>{});
 // Load contacts from Firebase

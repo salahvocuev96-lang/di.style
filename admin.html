@@ -132,7 +132,6 @@ header button:hover{border-color:var(--gold);color:var(--gold)}
   <div class="panel active" id="tab-gallery">
     <div class="section-head">
       <h2>ГАЛЕРЕЯ РАБОТ</h2>
-      <button class="btn-sm" onclick="openAddPhoto()">+ Добавить фото</button>
     </div>
     <div class="gallery-grid" id="galleryGrid">
       <div class="loading-state"><span class="spinner"></span>Загрузка...</div>
@@ -177,7 +176,7 @@ header button:hover{border-color:var(--gold);color:var(--gold)}
 
 <div class="modal-overlay" id="addPhotoModal">
   <div class="modal">
-    <h3>Добавить фото в галерею</h3>
+    <h3 id="addPhotoTitle">Заменить фото — Слот 1</h3>
     <img class="img-preview" id="addPhotoPreview">
     <div class="upload-zone" id="uploadZone" onclick="document.getElementById('photoFileInput').click()"
          ondragover="event.preventDefault();this.classList.add('drag')"
@@ -187,18 +186,15 @@ header button:hover{border-color:var(--gold);color:var(--gold)}
       <p>JPG, PNG — будет автоматически сжат</p>
     </div>
     <input type="file" id="photoFileInput" accept="image/*" style="display:none" onchange="handleFileSelect(this)">
+    <input type="hidden" id="addPhotoSlot" value="1">
     <div class="size-warning" id="sizeWarn"></div>
     <div class="upload-progress" id="uploadProgress">
       <p>Обработка фото...</p>
       <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
     </div>
-    <div class="field">
-      <label>Описание (необязательно)</label>
-      <input type="text" id="addPhotoDesc" placeholder="Например: Вышивка на кепке">
-    </div>
     <div class="modal-actions">
       <button class="btn-sm outline" onclick="closeModal('addPhotoModal')">Отмена</button>
-      <button class="btn-sm" id="addPhotoBtn" onclick="uploadPhoto()">Загрузить</button>
+      <button class="btn-sm" id="addPhotoBtn" onclick="uploadPhoto()">Сохранить</button>
     </div>
   </div>
 </div>
@@ -310,36 +306,31 @@ function compressImage(file,maxW=900,quality=0.82){
   });
 }
 
-// ── GALLERY ─────────────────────────────────────────────
-let galleryItems=[];
+// ── GALLERY (6 fixed slots) ──────────────────────────────
+const SLOT_NAMES=['Слот 1','Слот 2','Слот 3','Слот 4','Слот 5','Слот 6'];
 
 async function loadGallery(){
   const grid=document.getElementById('galleryGrid');
   grid.innerHTML='<div class="loading-state"><span class="spinner"></span>Загрузка...</div>';
   try{
-    const snap=await getDocs(collection(db,'gallery'));
-    galleryItems=[];
-    snap.forEach(d=>galleryItems.push({id:d.id,...d.data()}));
-    galleryItems.sort((a,b)=>(a.order||0)-(b.order||0));
-    renderGallery();
+    const snaps=await Promise.all([1,2,3,4,5,6].map(n=>getDoc(doc(db,'gallery','slot'+n))));
+    const slots=snaps.map((snap,i)=>({slot:i+1,url:snap.exists()?snap.data().url:''}));
+    renderGallery(slots);
   }catch(e){
     grid.innerHTML=`<div class="loading-state" style="color:var(--red)">Ошибка: ${e.message}</div>`;
   }
 }
 
-function renderGallery(){
+function renderGallery(slots){
   const grid=document.getElementById('galleryGrid');
-  if(!galleryItems.length){
-    grid.innerHTML='<div class="loading-state">Галерея пуста. Добавьте первое фото.</div>';
-    return;
-  }
-  grid.innerHTML=galleryItems.map(item=>`
+  grid.innerHTML=slots.map(s=>`
     <div class="gallery-card">
-      ${item.url?`<img src="${item.url}" alt="${item.desc||''}" loading="lazy">`:'<div class="no-img">Нет фото</div>'}
+      ${s.url?`<img src="${s.url}" alt="${SLOT_NAMES[s.slot-1]}" loading="lazy">`:'<div class="no-img">Нет фото</div>'}
       <div class="gallery-card-body">
-        <p>${item.desc||'Без описания'}</p>
+        <p style="font-weight:600;color:var(--gold)">${SLOT_NAMES[s.slot-1]}</p>
         <div class="gallery-card-actions">
-          <button class="btn-sm danger" style="flex:1" onclick="deletePhoto('${item.id}')">Удалить</button>
+          <button class="btn-sm outline" style="flex:1" onclick="openReplacePhoto(${s.slot})">Заменить</button>
+          ${s.url?`<button class="btn-sm danger" onclick="deletePhoto(${s.slot})">✕</button>`:''}
         </div>
       </div>
     </div>
@@ -348,10 +339,11 @@ function renderGallery(){
 
 let pendingPhotoData='';
 
-window.openAddPhoto=()=>{
+window.openReplacePhoto=slot=>{
   pendingPhotoData='';
+  document.getElementById('addPhotoSlot').value=slot;
+  document.getElementById('addPhotoTitle').textContent=`Заменить фото — ${SLOT_NAMES[slot-1]}`;
   document.getElementById('addPhotoPreview').style.display='none';
-  document.getElementById('addPhotoDesc').value='';
   document.getElementById('photoFileInput').value='';
   document.getElementById('sizeWarn').textContent='';
   document.getElementById('uploadProgress').style.display='none';
@@ -378,12 +370,8 @@ async function processPhotoFile(file){
     pendingPhotoData=data;
     const prev=document.getElementById('addPhotoPreview');
     prev.src=data;prev.style.display='block';
-    if(kb>700){
-      warn.textContent=`Фото: ${kb} КБ — большое, но загрузится`;
-      warn.className='size-warning warn';
-    }else{
-      warn.textContent=`Фото: ${kb} КБ`;
-    }
+    warn.textContent=`Фото: ${kb} КБ`;
+    warn.className=kb>700?'size-warning warn':'size-warning';
     setTimeout(()=>{prog.style.display='none';},400);
   }catch(e){
     warn.textContent='Ошибка обработки файла';
@@ -394,28 +382,28 @@ async function processPhotoFile(file){
 
 window.uploadPhoto=async()=>{
   if(!pendingPhotoData){toast('Выберите фото','fail');return;}
+  const slot=document.getElementById('addPhotoSlot').value;
   const btn=document.getElementById('addPhotoBtn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Сохранение...';
   try{
-    const desc=document.getElementById('addPhotoDesc').value.trim();
-    await addDoc(collection(db,'gallery'),{url:pendingPhotoData,desc,order:Date.now()});
+    await setDoc(doc(db,'gallery','slot'+slot),{url:pendingPhotoData,order:+slot});
     closeModal('addPhotoModal');
-    toast('Фото добавлено!');
+    toast(`${SLOT_NAMES[slot-1]} обновлён!`);
     loadGallery();
   }catch(e){
     toast('Ошибка: '+e.message,'fail');
   }
-  btn.disabled=false;btn.textContent='Загрузить';
+  btn.disabled=false;btn.textContent='Сохранить';
 };
 
-window.deletePhoto=id=>{
+window.deletePhoto=slot=>{
   document.getElementById('confirmModal').classList.add('open');
   document.getElementById('confirmOkBtn').onclick=async()=>{
     closeModal('confirmModal');
     try{
-      await deleteDoc(doc(db,'gallery',id));
-      toast('Фото удалено');loadGallery();
-    }catch(e){toast('Ошибка удаления','fail');}
+      await deleteDoc(doc(db,'gallery','slot'+slot));
+      toast(`${SLOT_NAMES[slot-1]} очищен`);loadGallery();
+    }catch(e){toast('Ошибка','fail');}
   };
 };
 
@@ -426,15 +414,24 @@ async function loadServices(){
     const snap=await getDocs(collection(db,'services'));
     let services=[];
     snap.forEach(d=>services.push({id:d.id,...d.data()}));
-    if(!services.length){
-      const defaults=[
-        {id:'svc1',title:'Вышивка на заказ',desc:'Любые логотипы, надписи и рисунки',img:'',order:1},
-        {id:'svc2',title:'Нашивки и патчи',desc:'Тканевые нашивки для одежды и аксессуаров',img:'',order:2},
-        {id:'svc3',title:'Корпоративная символика',desc:'Брендирование рабочей одежды и сувениров',img:'',order:3},
-        {id:'svc4',title:'Персонализация',desc:'Имена, даты, памятные надписи',img:'',order:4},
-      ];
-      for(const s of defaults)await setDoc(doc(db,'services',s.id),{title:s.title,desc:s.desc,img:s.img,order:s.order});
-      services=defaults;
+    const NEW_DEFAULTS=[
+      {id:'svc1',title:'Вышивка логотипов',desc:'',img:'',order:1},
+      {id:'svc2',title:'Индивидуальная вышивка',desc:'',img:'',order:2},
+      {id:'svc3',title:'Вышивка на аксессуарах',desc:'',img:'',order:3},
+      {id:'svc4',title:'Лента на букет',desc:'',img:'',order:4},
+      {id:'svc5',title:'Фатин на букет',desc:'',img:'',order:5},
+      {id:'svc6',title:'Нашивки на форму',desc:'',img:'',order:6},
+      {id:'svc7',title:'Вышитое письмо',desc:'',img:'',order:7},
+      {id:'svc8',title:'Именные пижамки',desc:'',img:'',order:8},
+    ];
+    // Check if services are old defaults or empty — replace with new
+    const isOld=!services.length||services.some(s=>['Вышивка на заказ','Нашивки и патчи','Корпоративная символика','Персонализация'].includes(s.title));
+    if(isOld){
+      // Delete old docs
+      for(const s of services)await deleteDoc(doc(db,'services',s.id));
+      // Create new
+      for(const s of NEW_DEFAULTS)await setDoc(doc(db,'services',s.id),{title:s.title,desc:s.desc,img:s.img,order:s.order});
+      services=NEW_DEFAULTS;
     }
     services.sort((a,b)=>(a.order||0)-(b.order||0));
     renderServices(services);
