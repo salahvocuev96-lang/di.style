@@ -34,6 +34,8 @@ header{position:fixed;inset:0 0 auto 0;z-index:50;padding-top:env(safe-area-inse
 .hero{position:relative;min-height:100svh;display:grid;align-items:center;overflow:hidden}
 #stage{position:absolute;inset:0;z-index:0}
 #stage canvas{width:100%;height:100%;display:block}
+#hvid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;pointer-events:none;background:var(--bg)}
+.hero::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(95deg,#0a0a0aeb 0%,#0a0a0ac9 40%,#0a0a0a5c 64%,#0a0a0a00 84%)}
 .fallback{position:absolute;right:8%;top:50%;transform:translateY(-50%);width:min(42vw,520px);aspect-ratio:1;display:none;place-items:center;font:700 clamp(5rem,16vw,12rem)/1 var(--serif);color:var(--gold);background:repeating-linear-gradient(35deg,#161616 0 3px,#101010 3px 6px);border:1px solid var(--line);text-shadow:0 2px 0 #000,0 0 30px #0008}
 .nogl .fallback{display:grid}
 .hero .wrap{position:relative;z-index:2;pointer-events:none;padding-top:6rem;padding-bottom:4rem}
@@ -107,6 +109,10 @@ footer ul{list-style:none;display:grid;gap:.5rem}footer a:hover{color:var(--ink)
 form{grid-template-columns:1fr}
 }
 @media(max-width:560px){.grid4,.steps{grid-template-columns:1fr}.btn{width:100%}}
+@media(max-aspect-ratio:5/4){
+#hvid{inset:8% 0 auto 0;height:min(32vh,72vw)}
+.hero::after{background:linear-gradient(#0a0a0a00 20%,#0a0a0a8c 42%,#0a0a0ae0 60%,#0a0a0a 80%)}
+}
 .dark{position:absolute;inset:0;z-index:1;background:#050505;pointer-events:none;transition:opacity 2.4s ease .1s}
 body.ready .dark{opacity:0}
 .mask{overflow:hidden;padding-bottom:.12em}
@@ -166,7 +172,7 @@ body.ready .hero .mask>span,.mask.mh.in>span{transform:none}
 
 <main>
 <section class="hero" id="home" style="padding:0">
-<div id="stage" aria-hidden="true"></div><div class="dark" aria-hidden="true"></div>
+<video id="hvid" poster="hero-poster.jpg" autoplay muted loop playsinline preload="auto" aria-hidden="true" tabindex="-1"><source src="hero.mp4" type="video/mp4"></video><div id="stage" aria-hidden="true"></div><div class="dark" aria-hidden="true"></div>
 <div class="fallback" aria-hidden="true">DS</div>
 <div class="wrap"><div class="copy">
 <span class="eyebrow reveal">Студия вышивки и брендирования</span>
@@ -427,7 +433,9 @@ function boot(){
 // 3D грузится лениво, после первой отрисовки страницы
 const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js";
 s.onload=boot;s.onerror=noGL;
-requestAnimationFrame(()=>setTimeout(()=>document.head.appendChild(s),0));
+const hv=document.getElementById("hvid");
+if(hv){const pv=()=>hv.play().catch(()=>{});pv();hv.addEventListener("loadeddata",pv,{once:true});addEventListener("touchstart",pv,{once:true,passive:true})}
+else requestAnimationFrame(()=>setTimeout(()=>document.head.appendChild(s),0));
 </script>
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
