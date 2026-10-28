@@ -92,6 +92,14 @@ input,select,textarea{background:#0f0f0f;border:1px solid var(--line);color:var(
 .gitem img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s}
 .gitem:hover img{transform:scale(1.06)}
 .gitem .gph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--line);font-size:2.5rem}
+.gitem[hidden]{display:none}
+.gfilter{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:2.2rem}
+.gfilter button{font:inherit;font-size:.82rem;letter-spacing:.03em;color:var(--mute);background:transparent;border:1px solid var(--line);padding:.6rem 1.1rem;min-height:2.6rem;cursor:pointer;transition:color .35s,border-color .35s,background .35s}
+.gfilter button:hover{color:var(--ink);border-color:var(--gold)}
+.gfilter button.on{background:var(--gold);border-color:var(--gold);color:#111}
+.gfilter button.off{opacity:.45}
+.gempty{display:none;margin-top:2.5rem;padding:3rem 1.2rem;text-align:center;color:var(--mute);font-size:.95rem;border:1px dashed var(--line)}
+.gempty.show{display:block}
 #lb{display:none;position:fixed;inset:0;background:#000c;z-index:2000;align-items:center;justify-content:center;padding:1rem}
 #lb.open{display:flex}
 #lb img{max-width:90vw;max-height:90vh;object-fit:contain;border:1px solid var(--line)}
@@ -108,7 +116,8 @@ footer ul{list-style:none;display:grid;gap:.5rem}footer a:hover{color:var(--ink)
 .hero .wrap{padding-top:5rem;align-self:end}.hero .copy{background:linear-gradient(transparent,#0a0a0acc 25%)}
 form{grid-template-columns:1fr}
 }
-@media(max-width:560px){.grid4,.steps{grid-template-columns:1fr}.btn{width:100%}}
+@media(max-width:560px){.grid4,.steps{grid-template-columns:1fr}.btn{width:100%}
+.gfilter{gap:.4rem}.gfilter button{font-size:.75rem;padding:.5rem .85rem;min-height:2.4rem}}
 @media(max-aspect-ratio:5/4){
 #hvid{inset:8% 0 auto 0;height:min(32vh,72vw)}
 .hero::after{background:linear-gradient(#0a0a0a00 20%,#0a0a0a8c 42%,#0a0a0ae0 60%,#0a0a0a 80%)}
@@ -194,7 +203,9 @@ body.ready .hero .mask>span,.mask.mh.in>span{transform:none}
 
 <section id="works"><div class="wrap">
 <span class="eyebrow">Галерея</span><h2 class="reveal">Наши работы</h2>
+<div class="gfilter" id="gfilter"></div>
 <div class="gallery" id="gallery"></div>
+<div class="gempty" id="gempty">В этой категории работы скоро появятся.</div>
 </div></section>
 <div id="lb"><button id="lb-close" aria-label="Закрыть">×</button><img id="lb-img" src="" alt=""></div>
 
@@ -281,10 +292,26 @@ gl.innerHTML=GALLERY.map((g,i)=>g.img
   ?`<div class="gitem reveal" data-i="${i}"><img src="${g.img}" alt="${g.alt}" loading="lazy"></div>`
   :`<div class="gitem reveal" data-i="${i}"><div class="gph">+</div></div>`
 ).join("");
+/* каталоги галереи; фото в категории добавляются через админ-панель */
+const GCATS=[["brand","Брендирование одежды и логотипов"],["acc","Вышивка на аксессуарах"],["ribbon","Лента на букет"],["fatin","Фатин на букет"],["patch","Нашивка на форму"],["letter","Вышитое письмо"],["pajama","Именные пижамки"],["hoodie","Чёрная толстовка"],["workwear","Рабочая одежда"]];
+const gf=$("#gfilter"),gEmpty=$("#gempty");
+gf.innerHTML='<button type="button" class="on" data-cat="">Избранное</button>'+GCATS.map(c=>`<button type="button" data-cat="${c[0]}">${c[1]}</button>`).join("");
+function gApply(cat){
+  gf.querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.cat===cat));
+  let shown=0;
+  gl.querySelectorAll(".gitem").forEach(el=>{
+    const ok=cat?el.dataset.cat===cat:!el.dataset.cat;
+    el.hidden=!ok;
+    if(ok)shown++;
+  });
+  gEmpty.classList.toggle("show",!shown);
+}
+gf.addEventListener("click",e=>{const b=e.target.closest("button");if(b)gApply(b.dataset.cat)});
+window.gApply=gApply;
 const lb=$("#lb"),lbImg=$("#lb-img");
 const openLb=src=>{lbImg.src=src;lb.classList.add("open")};
 const closeLb=()=>{lb.classList.remove("open");lbImg.src=""};
-gl.addEventListener("click",e=>{const el=e.target.closest(".gitem");if(!el)return;const fbImg=el.dataset.fbImg;const g=GALLERY[+el.dataset.i];const src=fbImg||(g&&g.img)||'';if(src)openLb(src)});
+gl.addEventListener("click",e=>{const el=e.target.closest(".gitem");if(!el)return;const g=GALLERY[+el.dataset.i];const im=el.querySelector("img");const src=el.dataset.fbImg||(im&&im.src)||(g&&g.img)||'';if(src)openLb(src)});
 $("#lb-close").onclick=closeLb;lb.addEventListener("click",e=>{if(e.target===lb)closeLb()});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeLb()});
 $("#yr").textContent=new Date().getFullYear();
@@ -444,22 +471,48 @@ const _fc={apiKey:"AIzaSyCqpgFBXGKghBue7Dq1whc-ZXBaiV2z3Sk",authDomain:"di-style
 try{
 const _app=initializeApp(_fc);
 const _db=getFirestore(_app);
-// Load gallery slots from Firebase (slot1-slot6)
-Promise.all([1,2,3,4,5,6].map(n=>getDoc(doc(_db,'gallery','slot'+n)))).then(snaps=>{
+// Load gallery from Firebase: slot1..slot6 override the built-in photos,
+// "<category>-<n>" documents fill the catalog categories
+getDocs(collection(_db,'gallery')).then(snap=>{
   const gl=document.getElementById("gallery");
   if(!gl)return;
   const gItems=Array.from(gl.querySelectorAll('.gitem'));
-  snaps.forEach((snap,i)=>{
-    if(!snap.exists())return;
-    const url=snap.data().url;
+  const extra=[];
+  snap.forEach(d=>{
+    const url=(d.data()||{}).url;
     if(!url)return;
-    const el=gItems[i];
-    if(!el)return;
-    el.dataset.fbImg=url;
-    const img=el.querySelector('img');
-    if(img){img.src=url;}
-    else{el.insertAdjacentHTML('beforeend',`<img src="${url}" loading="lazy" style="width:100%;height:100%;object-fit:cover">`);}
+    const base=/^slot([1-6])$/.exec(d.id);
+    if(base){
+      const el=gItems[+base[1]-1];
+      if(!el)return;
+      el.dataset.fbImg=url;
+      const img=el.querySelector('img');
+      if(img)img.src=url;
+      else el.insertAdjacentHTML('beforeend',`<img src="${url}" loading="lazy" style="width:100%;height:100%;object-fit:cover">`);
+      return;
+    }
+    const m=/^(.+)-([1-9][0-9]*)$/.exec(d.id);
+    if(m)extra.push({cat:m[1],n:+m[2],url});
   });
+  extra.sort((a,b)=>a.cat<b.cat?-1:a.cat>b.cat?1:a.n-b.n);
+  for(const x of extra){
+    const cell=document.createElement('div');
+    cell.className='gitem';
+    cell.dataset.cat=x.cat;
+    const img=document.createElement('img');
+    img.loading='lazy';img.alt='';img.src=x.url;
+    cell.appendChild(img);
+    gl.appendChild(cell);
+  }
+  const gf=document.getElementById('gfilter');
+  if(gf){
+    const filled=new Set(extra.map(x=>x.cat));
+    gf.querySelectorAll('button[data-cat]').forEach(b=>{
+      if(b.dataset.cat)b.classList.toggle('off',!filled.has(b.dataset.cat));
+    });
+    const cur=gf.querySelector('button.on');
+    if(window.gApply)window.gApply(cur?cur.dataset.cat:'');
+  }
 }).catch(()=>{});
 // Load services from Firebase (overlay: blank fields keep site defaults)
 getDocs(collection(_db,'services')).then(snap=>{

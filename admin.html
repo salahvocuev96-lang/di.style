@@ -40,6 +40,13 @@ header button:hover{border-color:var(--gold);color:var(--gold)}
 .btn-sm.danger{background:none;color:var(--red);border:1px solid var(--red)}
 .btn-sm.danger:hover{background:var(--red);color:#fff}
 
+.gcats{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.gcats button{font:inherit;font-size:.82rem;color:#aaa;background:var(--bg3);border:1px solid var(--border);border-radius:999px;padding:8px 14px;cursor:pointer;transition:all .2s}
+.gcats button:hover{color:var(--gold);border-color:var(--gold)}
+.gcats button.on{background:var(--gold);border-color:var(--gold);color:#000;font-weight:600}
+.gcats button i{font-style:normal;opacity:.7;margin-left:7px;font-size:.76rem}
+.gcats button.on i{opacity:.65}
+.gcat-hint{font-size:.8rem;color:#777;margin-bottom:18px;line-height:1.5}
 .gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
 .gallery-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden}
 .gallery-card img{width:100%;height:160px;object-fit:cover;display:block}
@@ -139,6 +146,8 @@ header button:hover{border-color:var(--gold);color:var(--gold)}
     <div class="section-head">
       <h2>ГАЛЕРЕЯ РАБОТ</h2>
     </div>
+    <div class="gcats" id="gcats"></div>
+    <div class="gcat-hint" id="gcatHint"></div>
     <div class="gallery-grid" id="galleryGrid">
       <div class="loading-state"><span class="spinner"></span>Загрузка...</div>
     </div>
@@ -196,6 +205,7 @@ header button:hover{border-color:var(--gold);color:var(--gold)}
     </div>
     <input type="file" id="photoFileInput" accept="image/*" style="display:none" onchange="handleFileSelect(this)">
     <input type="hidden" id="addPhotoSlot" value="1">
+    <input type="hidden" id="addPhotoCat" value="base">
     <div class="size-warning" id="sizeWarn"></div>
     <div class="modal-actions">
       <button class="btn-sm outline" onclick="closeModal('addPhotoModal')">Отмена</button>
@@ -405,37 +415,70 @@ const svcCropper=makeCropper('svcCrop','svcCropImg','svcZoom','svcHint');
 // ── GALLERY (6 fixed slots) ──────────────────────────────
 const SLOT_NAMES=['Слот 1','Слот 2','Слот 3','Слот 4','Слот 5','Слот 6'];
 
+// catalog categories; ids must match GCATS in index.html
+const GCATS=[
+  {id:'base',    t:'Основные 6 фото'},
+  {id:'brand',   t:'Брендирование одежды и логотипов'},
+  {id:'acc',     t:'Вышивка на аксессуарах'},
+  {id:'ribbon',  t:'Лента на букет'},
+  {id:'fatin',   t:'Фатин на букет'},
+  {id:'patch',   t:'Нашивка на форму'},
+  {id:'letter',  t:'Вышитое письмо'},
+  {id:'pajama',  t:'Именные пижамки'},
+  {id:'hoodie',  t:'Чёрная толстовка'},
+  {id:'workwear',t:'Рабочая одежда'},
+];
+// "base" keeps the original slot1..slot6 documents untouched
+const gDocId=(cat,slot)=>cat==='base'?'slot'+slot:cat+'-'+slot;
+const gTitle=cat=>(GCATS.find(c=>c.id===cat)||{}).t||'';
+let gCat='base', gPhotos={};
+
 async function loadGallery(){
   const grid=document.getElementById('galleryGrid');
   grid.innerHTML='<div class="loading-state"><span class="spinner"></span>Загрузка...</div>';
   try{
-    const snaps=await Promise.all([1,2,3,4,5,6].map(n=>getDoc(doc(db,'gallery','slot'+n))));
-    const slots=snaps.map((snap,i)=>({slot:i+1,url:snap.exists()?snap.data().url:''}));
-    renderGallery(slots);
+    const snap=await getDocs(collection(db,'gallery'));
+    gPhotos={};
+    snap.forEach(d=>{const u=(d.data()||{}).url;if(u)gPhotos[d.id]=u});
+    renderCats();renderGallery();
   }catch(e){
     grid.innerHTML=`<div class="loading-state" style="color:var(--red)">Ошибка: ${e.message}</div>`;
   }
 }
 
-function renderGallery(slots){
-  const grid=document.getElementById('galleryGrid');
-  grid.innerHTML=slots.map(s=>`
-    <div class="gallery-card">
-      ${s.url?`<img src="${s.url}" alt="${SLOT_NAMES[s.slot-1]}" loading="lazy">`:'<div class="no-img">Нет фото</div>'}
+const catCount=cat=>[1,2,3,4,5,6].filter(s=>gPhotos[gDocId(cat,s)]).length;
+
+function renderCats(){
+  document.getElementById('gcats').innerHTML=GCATS.map(c=>
+    `<button type="button" class="${c.id===gCat?'on':''}" onclick="selectGCat('${c.id}')">${c.t}<i>${catCount(c.id)}/6</i></button>`
+  ).join('');
+  document.getElementById('gcatHint').textContent = gCat==='base'
+    ? 'Эти 6 фото посетитель видит сразу — кнопка «Избранное» в разделе «Наши работы».'
+    : `Эти фото посетитель увидит, нажав на сайте кнопку «${gTitle(gCat)}».`;
+}
+
+window.selectGCat=id=>{gCat=id;renderCats();renderGallery();};
+
+function renderGallery(){
+  document.getElementById('galleryGrid').innerHTML=[1,2,3,4,5,6].map(s=>{
+    const url=gPhotos[gDocId(gCat,s)]||'';
+    return `<div class="gallery-card">
+      ${url?`<img src="${url}" alt="" loading="lazy">`:'<div class="no-img">Нет фото</div>'}
       <div class="gallery-card-body">
-        <p style="font-weight:600;color:var(--gold)">${SLOT_NAMES[s.slot-1]}</p>
+        <p style="font-weight:600;color:var(--gold)">${SLOT_NAMES[s-1]}</p>
         <div class="gallery-card-actions">
-          <button class="btn-sm outline" style="flex:1" onclick="openReplacePhoto(${s.slot})">Заменить</button>
-          ${s.url?`<button class="btn-sm danger" onclick="deletePhoto(${s.slot})">✕</button>`:''}
+          <button class="btn-sm outline" style="flex:1" onclick="openReplacePhoto(${s})">Заменить</button>
+          ${url?`<button class="btn-sm danger" onclick="deletePhoto(${s})">✕</button>`:''}
         </div>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
 window.openReplacePhoto=slot=>{
   document.getElementById('addPhotoSlot').value=slot;
-  document.getElementById('addPhotoTitle').textContent=`Заменить фото — ${SLOT_NAMES[slot-1]}`;
+  document.getElementById('addPhotoCat').value=gCat;
+  document.getElementById('addPhotoTitle').textContent=`${gTitle(gCat)} — ${SLOT_NAMES[slot-1]}`;
   document.getElementById('photoFileInput').value='';
   document.getElementById('sizeWarn').textContent='';
   galCropper.clear();galCropper.hide();
@@ -466,13 +509,14 @@ async function processPhotoFile(file){
 window.uploadPhoto=async()=>{
   if(!galCropper.ready){toast('Выберите фото','fail');return;}
   const slot=document.getElementById('addPhotoSlot').value;
+  const cat=document.getElementById('addPhotoCat').value;
   const btn=document.getElementById('addPhotoBtn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Сохранение...';
   try{
     const {data,kb}=galCropper.toDataURL(900,0.82);
-    await setDoc(doc(db,'gallery','slot'+slot),{url:data,order:+slot});
+    await setDoc(doc(db,'gallery',gDocId(cat,slot)),{url:data,order:+slot,cat});
     closeModal('addPhotoModal');
-    toast(`${SLOT_NAMES[slot-1]} обновлён (${kb} КБ)`);
+    toast(`${gTitle(cat)} — ${SLOT_NAMES[slot-1]} обновлён (${kb} КБ)`);
     loadGallery();
   }catch(e){
     toast('Ошибка: '+e.message,'fail');
@@ -481,12 +525,13 @@ window.uploadPhoto=async()=>{
 };
 
 window.deletePhoto=slot=>{
+  const cat=gCat;
   document.getElementById('confirmModal').classList.add('open');
   document.getElementById('confirmOkBtn').onclick=async()=>{
     closeModal('confirmModal');
     try{
-      await deleteDoc(doc(db,'gallery','slot'+slot));
-      toast(`${SLOT_NAMES[slot-1]} очищен`);loadGallery();
+      await deleteDoc(doc(db,'gallery',gDocId(cat,slot)));
+      toast(`${gTitle(cat)} — ${SLOT_NAMES[slot-1]} очищен`);loadGallery();
     }catch(e){toast('Ошибка','fail');}
   };
 };
