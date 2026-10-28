@@ -417,7 +417,6 @@ const SLOT_NAMES=['Слот 1','Слот 2','Слот 3','Слот 4','Слот 
 
 // catalog categories; ids must match GCATS in index.html
 const GCATS=[
-  {id:'base',    t:'Основные 6 фото'},
   {id:'brand',   t:'Брендирование одежды и логотипов'},
   {id:'acc',     t:'Вышивка на аксессуарах'},
   {id:'ribbon',  t:'Лента на букет'},
@@ -428,10 +427,10 @@ const GCATS=[
   {id:'hoodie',  t:'Чёрная толстовка'},
   {id:'workwear',t:'Рабочая одежда'},
 ];
-// "base" keeps the original slot1..slot6 documents untouched
-const gDocId=(cat,slot)=>cat==='base'?'slot'+slot:cat+'-'+slot;
+// the first catalog keeps the original slot1..slot6 documents
+const gDocId=(cat,slot)=>cat==='brand'?'slot'+slot:cat+'-'+slot;
 const gTitle=cat=>(GCATS.find(c=>c.id===cat)||{}).t||'';
-let gCat='base', gPhotos={};
+let gCat='brand', gPhotos={};
 
 async function loadGallery(){
   const grid=document.getElementById('galleryGrid');
@@ -452,8 +451,8 @@ function renderCats(){
   document.getElementById('gcats').innerHTML=GCATS.map(c=>
     `<button type="button" class="${c.id===gCat?'on':''}" onclick="selectGCat('${c.id}')">${c.t}<i>${catCount(c.id)}/6</i></button>`
   ).join('');
-  document.getElementById('gcatHint').textContent = gCat==='base'
-    ? 'Эти 6 фото посетитель видит сразу — кнопка «Избранное» в разделе «Наши работы».'
+  document.getElementById('gcatHint').textContent = gCat===GCATS[0].id
+    ? `«${gTitle(gCat)}» — первый каталог: эти фото посетитель видит сразу, открыв «Наши работы».`
     : `Эти фото посетитель увидит, нажав на сайте кнопку «${gTitle(gCat)}».`;
 }
 

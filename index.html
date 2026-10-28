@@ -295,12 +295,14 @@ gl.innerHTML=GALLERY.map((g,i)=>g.img
 /* каталоги галереи; фото в категории добавляются через админ-панель */
 const GCATS=[["brand","Брендирование одежды и логотипов"],["acc","Вышивка на аксессуарах"],["ribbon","Лента на букет"],["fatin","Фатин на букет"],["patch","Нашивка на форму"],["letter","Вышитое письмо"],["pajama","Именные пижамки"],["hoodie","Чёрная толстовка"],["workwear","Рабочая одежда"]];
 const gf=$("#gfilter"),gEmpty=$("#gempty");
-gf.innerHTML='<button type="button" class="on" data-cat="">Избранное</button>'+GCATS.map(c=>`<button type="button" data-cat="${c[0]}">${c[1]}</button>`).join("");
+gf.innerHTML=GCATS.map((c,i)=>`<button type="button" class="${i?"":"on"}" data-cat="${c[0]}">${c[1]}</button>`).join("");
+// the six built-in photos are the first catalog's content
+gl.querySelectorAll(".gitem:not([data-cat])").forEach(el=>{el.dataset.cat=GCATS[0][0]});
 function gApply(cat){
   gf.querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.cat===cat));
   let shown=0;
   gl.querySelectorAll(".gitem").forEach(el=>{
-    const ok=cat?el.dataset.cat===cat:!el.dataset.cat;
+    const ok=el.dataset.cat===cat;
     el.hidden=!ok;
     if(ok)shown++;
   });
@@ -308,6 +310,7 @@ function gApply(cat){
 }
 gf.addEventListener("click",e=>{const b=e.target.closest("button");if(b)gApply(b.dataset.cat)});
 window.gApply=gApply;
+gApply(GCATS[0][0]);
 const lb=$("#lb"),lbImg=$("#lb-img");
 const openLb=src=>{lbImg.src=src;lb.classList.add("open")};
 const closeLb=()=>{lb.classList.remove("open");lbImg.src=""};
@@ -506,12 +509,12 @@ getDocs(collection(_db,'gallery')).then(snap=>{
   }
   const gf=document.getElementById('gfilter');
   if(gf){
-    const filled=new Set(extra.map(x=>x.cat));
+    const filled=new Set(Array.from(gl.querySelectorAll('.gitem[data-cat]')).map(el=>el.dataset.cat));
     gf.querySelectorAll('button[data-cat]').forEach(b=>{
-      if(b.dataset.cat)b.classList.toggle('off',!filled.has(b.dataset.cat));
+      b.classList.toggle('off',!filled.has(b.dataset.cat));
     });
-    const cur=gf.querySelector('button.on');
-    if(window.gApply)window.gApply(cur?cur.dataset.cat:'');
+    const cur=gf.querySelector('button.on')||gf.querySelector('button');
+    if(window.gApply&&cur)window.gApply(cur.dataset.cat);
   }
 }).catch(()=>{});
 // Load services from Firebase (overlay: blank fields keep site defaults)
